@@ -1,0 +1,30 @@
+{
+  "key": "/works/OL8996439W",
+  "title": "Il nome della rosa",
+  "description": {
+    "type": "/type/text",
+    "value": "It is the year 1327. Franciscans in an Italian abbey are suspected of heresy, but Brother William of Baskerville’s investigation is suddenly overshadowed by seven bizarre deaths.\r\n\r\nUltima settimana del novembre 1327. Il novizio Adso da Melk accompagna in un'abbazia dell'alta Italia frate Guglielmo da Baskerville, incaricato di una sottile e imprecisa missione diplomatica. Ex inquisitore, amico di Guglielmo di Occam e di Marsilio da Padova, frate Guglielmo si trova a dover dipanare una serie di misteriosi delitti (sette in sette giorni, perpetrati nel chiuso della cinta abbaziale) che insanguinano una biblioteca labirintica e inaccessibile. Per risolvere il caso, Guglielmo dovrà decifrare indizi di ogni genere, dal comportamento dei santi a quello degli eretici, dalle scritture negromantiche al linguaggio delle erbe, da manoscritti in lingue ignote alle mosse diplomatiche degli uomini di potere. La soluzione arriverà, forse troppo tardi, in termini di giorni, forse troppo presto, in termini di secoli. La copertina dell'articolo può variare."
+  },
+  "subjects": [
+    "Novela de misterio",
+    "History",
+    "Monasticismo y vida religiosa",
+    "Novela didáctica",
+    "Bibliotecas monásticas",
+    "Historia",
+    "Novela histórica",
+    "Monastic and religious life"
+  ],
+  "covers": [8598263, 4634783, 1055772, 4918447, 1049161, 490115, 8249960, 8013167],
+  "first_publish_date": "December 2003",
+  "authors": [
+    {
+      "author": {
+        "key": "/authors/OL20735A"
+      },
+      "type": {
+        "key": "/type/author_role"
+      }
+    }
+  ]
+}

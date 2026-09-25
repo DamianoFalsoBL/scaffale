@@ -1,0 +1,81 @@
+{
+  "numFound": 36,
+  "start": 0,
+  "numFoundExact": true,
+  "num_found": 36,
+  "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+  "q": "il nome della rosa",
+  "offset": null,
+  "docs": [
+    {
+      "author_name": ["Umberto Eco"],
+      "cover_i": 8598263,
+      "first_publish_year": 1980,
+      "isbn": [
+        "9781448137749",
+        "9780330284783",
+        "9788401413117",
+        "9780749385156",
+        "2246245141",
+        "9788401242137",
+        "9788845210662",
+        "9789035102446"
+      ],
+      "key": "/works/OL8996439W",
+      "language": [
+        "hun",
+        "cat",
+        "dut",
+        "ita",
+        "por",
+        "ger",
+        "fre",
+        "cze",
+        "rus",
+        "pol",
+        "spa",
+        "eng"
+      ],
+      "number_of_pages_median": 533,
+      "title": "Il nome della rosa",
+      "subject": [
+        "Novela de misterio",
+        "History",
+        "Monasticismo y vida religiosa",
+        "Novela didáctica",
+        "Bibliotecas monásticas",
+        "Historia",
+        "Novela histórica",
+        "Monastic and religious life"
+      ]
+    },
+    {
+      "author_name": ["Umberto Eco"],
+      "cover_i": 5492462,
+      "first_publish_year": 1983,
+      "isbn": [
+        "015173156X",
+        "9505150202",
+        "074939627X",
+        "9782253044147",
+        "9781568496757",
+        "043614090X",
+        "2253044148",
+        "0436140985"
+      ],
+      "key": "/works/OL14852855W",
+      "language": ["ger", "swe", "fre", "spa", "ita", "eng"],
+      "number_of_pages_median": 84,
+      "title": "Postille a Il nome della rosa",
+      "subject": ["Italy, fiction", "Fiction, general", "Cri tica i interpretacio ."]
+    },
+    {
+      "author_name": ["Umberto Eco"],
+      "first_publish_year": 1986,
+      "key": "/works/OL37388433W",
+      "language": ["ita"],
+      "number_of_pages_median": 442,
+      "title": "Il nome della rosa"
+    }
+  ]
+}

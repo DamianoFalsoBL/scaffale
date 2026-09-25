@@ -2,7 +2,7 @@
 
 Tracker personale di film, serie TV e libri. Uso personale, non commerciale.
 
-Stato: **Fase 1** (database, RLS, login con magic link). Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
+Stato: **Fase 2** (adapter TMDB / Google Books / Open Library e ricerca unificata). Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
 
 ## Stack
 
@@ -116,6 +116,7 @@ Note sulle versioni:
 | `CRON_SECRET`                          | solo server   | 4       | Almeno 16 caratteri                           |
 | `ALLOWED_EMAILS`                       | solo server   | 1       | Facoltativa, separate da virgola              |
 | `NEXT_PUBLIC_SITE_URL`                 | client+server | 0       | Default `http://localhost:3000`               |
+| `DNS_IPV4_FIRST`                       | solo server   | —       | Facoltativa, solo sviluppo locale: vedi sotto |
 
 Le variabili vengono validate con Zod in `src/lib/validation/env.ts`. Le usi così:
 
@@ -152,14 +153,34 @@ Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incolla
 - Login solo con **magic link** (`/login`). Il link porta a `/auth/confirm`, che crea la sessione e rimanda a `/dashboard`.
 - `src/proxy.ts` rinnova la sessione a ogni richiesta e manda a `/login` chi non è autenticato. Il layout `(app)` ricontrolla la sessione e applica `ALLOWED_EMAILS`.
 - Il form risponde sempre "controlla la tua email", anche per indirizzi non autorizzati, così non rivela quali account esistono.
-- **Registrazioni chiuse** su Supabase (`enable_signup = false` in `supabase/config.toml`), attive dal 25/09/2026 dopo la creazione del primo account. Verifica: una chiamata diretta a `POST /auth/v1/signup` con la publishable key risponde `422 signup_disabled`.
-- Per aggiungere un altro utente: aggiungi l'email ad `ALLOWED_EMAILS`, riapri temporaneamente le registrazioni (`enable_signup = true`, diff + push), fai il primo accesso e poi richiudile.
+- **Registrazioni chiuse** su Supabase (`[auth] enable_signup = false` in `supabase/config.toml`; attenzione: `[auth.email] enable_signup` deve restare `true`, altrimenti si spegne tutto il login via email), attive dal 25/09/2026 dopo la creazione del primo account. Verifica: una chiamata diretta a `POST /auth/v1/signup` con la publishable key risponde `422 signup_disabled`.
+- Per aggiungere un altro utente: aggiungi l'email ad `ALLOWED_EMAILS`, riapri temporaneamente le registrazioni (`[auth] enable_signup = true`, diff + push), fai il primo accesso e poi richiudile.
 - Sul piano free con l'SMTP integrato di Supabase:
   - i template email non si possono personalizzare, quindi l'email è in inglese;
   - il link usa il flusso PKCE (`?code=`) e va aperto **nello stesso browser** in cui l'hai richiesto (per esempio non nel browser integrato di Claude se Gmail apre i link in Chrome). Se succede, la pagina di login lo spiega;
   - l'SMTP integrato invia solo agli indirizzi dei membri dell'organizzazione Supabase, con pochi invii all'ora.
 
   Con un SMTP personalizzato (valutazione in Fase 4) si potrà usare un template con `token_hash`, già supportato da `/auth/confirm`, che funziona su qualsiasi dispositivo.
+
+## Ricerca e fonti esterne
+
+Tutte le chiamate alle API esterne partono **solo dal server** (`src/lib/providers/`) e ogni risposta viene validata con Zod. Se un singolo risultato non rispetta lo schema viene scartato, senza far fallire la pagina.
+
+| Fonte            | Uso                      | Dettagli                                                                                                                                                                                             |
+| ---------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TMDB**         | Film e serie             | `it-IT`, `region=IT` sui film; `/search/multi` senza persone; dettagli con `append_to_response=translations` per ripiegare sulla trama `en-US`; generi tradotti con `/genre/*/list` (cache 7 giorni) |
+| **Google Books** | Libri (fonte principale) | Due ricerche in parallelo (`langRestrict=it` + senza filtro), prima le edizioni italiane, niente doppioni per id/ISBN; thumbnail in https; ISBN-13 (anche convertito da ISBN-10)                     |
+| **Open Library** | Libri (riserva)          | Usata quando Google non trova nulla o fallisce (quota, 5xx, timeout); copertine per ISBN quando mancano                                                                                              |
+
+- **Retry:** su 429 e 5xx fino a 2 nuovi tentativi, rispettando `Retry-After` (massimo 5 s) o con backoff esponenziale; timeout di 8 s.
+- **Cache (fetch di Next):** 10 minuti per le ricerche, 24 ore per i dettagli.
+- **`GET /api/search?q=&type=all|movie|tv|book&page=`:** richiede una sessione (401 altrimenti). In "Tutti" alterna film/serie e libri; se una fonte non risponde restituisce comunque l'altra, con `unavailable` valorizzato.
+- **Pagina `/search`:** debounce di 300 ms, filtri salvati nell'URL, "Carica altri". Le copertine usano `next/image` con `unoptimized`, perché i CDN servono già immagini ridimensionate.
+- **Test:** `tests/fixtures/` contiene risposte **reali** (ridotte) registrate il 25/09/2026.
+
+### Rete locale: TMDB e IPv6
+
+Su alcune reti le connessioni **IPv6** verso CloudFront (la CDN di TMDB) vengono resettate durante l'handshake TLS: `curl -6` fallisce, `curl -4` funziona. Node prova prima IPv6 e non ripiega da solo. In quel caso metti `DNS_IPV4_FIRST=true` in `.env.local`: `src/instrumentation.ts` fa preferire IPv4 al server. Su Vercel non serve.
 
 ## Script
 
@@ -186,7 +207,8 @@ src/
   actions/           # Server Actions (auth: login con magic link, logout)
   app/
     (auth)/login/    # Pagina di login
-    (app)/           # Area protetta (layout con header, dashboard)
+    (app)/           # Area protetta: layout con header, dashboard, ricerca (/search)
+    api/search/      # Route della ricerca unificata
     auth/confirm/    # Route di atterraggio del magic link
   components/        # Componenti dell'app (ThemeProvider, ThemeToggle…)
     ui/              # Componenti shadcn/ui (generati con `pnpm dlx shadcn@latest add …`)
@@ -194,16 +216,16 @@ src/
     env.ts           # Variabili pubbliche validate
     env.server.ts    # Variabili server validate (server-only)
     validation/      # Schemi Zod (+ test)
-    providers/       # Adapter TMDB / Google Books / Open Library (Fase 2)
+    providers/       # Adapter TMDB / Google Books / Open Library, client HTTP con retry, ricerca unificata
     auth/            # Allowlist e utente corrente (getCurrentUser)
     supabase/        # Client browser/server/admin, refresh sessione nel proxy, tipi generati
 supabase/
   config.toml        # Config della CLI Supabase
   migrations/        # Migrazioni SQL: unica fonte di verità dello schema
   tests/             # Test SQL (isolamento RLS)
-tests/fixtures/      # Fixture JSON delle API esterne (Fase 2)
+tests/fixtures/      # Risposte reali (ridotte) di TMDB, Google Books e Open Library
 ```
 
 ## Attribuzioni
 
-Questo prodotto userà le API di TMDB (Fase 2); l'attribuzione nel footer verrà aggiunta nella Fase 4.
+Questo prodotto usa le API di TMDB. L'attribuzione richiesta dai termini (logo TMDB e "This product uses the TMDB API but is not endorsed or certified by TMDB") verrà aggiunta nel footer e in una pagina `/info` nella Fase 4, prima del deploy.

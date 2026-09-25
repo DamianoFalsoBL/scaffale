@@ -18,7 +18,8 @@ Full spec: [docs/spec.md](docs/spec.md). Decisions that override the spec are li
 - Supabase keys: `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` (legacy anon/service_role are deprecated).
 - Supabase: cloud project only (no local Docker stack), project `scaffale`, ref `wacmcxumcgbpmquqiuos`, CLI linked.
 - Migrations live in `supabase/migrations` and include explicit Data API `grant`s. When applied through the Supabase MCP (`apply_migration`), rename the local file to the version reported by `list_migrations` so `supabase db push` stays in sync. Regenerate `src/lib/supabase/database.types.ts` after every schema change.
-- Auth config goes through `supabase/config.toml`: always run `supabase config diff` and review it before `supabase config push`.
+- Auth config goes through `supabase/config.toml`: always run `supabase config diff` and review it before `supabase config push`. Sign-ups are closed with `[auth] enable_signup = false`; `[auth.email] enable_signup` must stay `true` (on hosted projects it switches the whole email provider off).
+- Local network quirk: IPv6 to CloudFront (TMDB) is reset; `DNS_IPV4_FIRST=true` in `.env.local` (see `src/instrumentation.ts`). Scripts that call TMDB need `node --dns-result-order=ipv4first`.
 - Free tier + built-in SMTP: email templates cannot be edited, so magic links use PKCE `code` (same browser). `/auth/confirm` also supports `token_hash` for when custom SMTP is configured.
 - Protected pages live under `src/app/(app)`; use `getCurrentUser()` (`@/lib/auth/session`) in server code. It enforces `ALLOWED_EMAILS`.
 - Next.js 16: request interception lives in `src/proxy.ts` (not `middleware.ts`).
