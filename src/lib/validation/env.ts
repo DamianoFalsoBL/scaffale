@@ -7,8 +7,8 @@ const optional = <T extends z.ZodType>(schema: T) =>
   z.preprocess(emptyToUndefined, schema.optional());
 
 export const publicEnvSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: optional(z.url()),
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(1)),
+  NEXT_PUBLIC_SUPABASE_URL: z.url(),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   NEXT_PUBLIC_SITE_URL: z.preprocess(emptyToUndefined, z.url().default('http://localhost:3000')),
 });
 

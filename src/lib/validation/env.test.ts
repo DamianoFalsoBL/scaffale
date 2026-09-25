@@ -2,11 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import { publicEnvSchema, serverEnvSchema } from './env';
 
+const validPublicEnv = {
+  NEXT_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co',
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_123',
+};
+
 describe('publicEnvSchema', () => {
   it('accepts a complete configuration', () => {
     const env = publicEnvSchema.parse({
-      NEXT_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co',
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_123',
+      ...validPublicEnv,
       NEXT_PUBLIC_SITE_URL: 'https://media.example.com',
     });
 
@@ -14,20 +18,25 @@ describe('publicEnvSchema', () => {
     expect(env.NEXT_PUBLIC_SITE_URL).toBe('https://media.example.com');
   });
 
-  it('treats empty strings as unset and applies the site URL default', () => {
-    const env = publicEnvSchema.parse({
-      NEXT_PUBLIC_SUPABASE_URL: '',
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '',
-      NEXT_PUBLIC_SITE_URL: '',
-    });
+  it('applies the site URL default when it is empty', () => {
+    const env = publicEnvSchema.parse({ ...validPublicEnv, NEXT_PUBLIC_SITE_URL: '' });
 
-    expect(env.NEXT_PUBLIC_SUPABASE_URL).toBeUndefined();
-    expect(env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).toBeUndefined();
     expect(env.NEXT_PUBLIC_SITE_URL).toBe('http://localhost:3000');
   });
 
+  it('requires the Supabase URL and publishable key', () => {
+    expect(publicEnvSchema.safeParse({}).success).toBe(false);
+    expect(
+      publicEnvSchema.safeParse({ ...validPublicEnv, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '' })
+        .success,
+    ).toBe(false);
+  });
+
   it('rejects a malformed Supabase URL', () => {
-    const result = publicEnvSchema.safeParse({ NEXT_PUBLIC_SUPABASE_URL: 'not a url' });
+    const result = publicEnvSchema.safeParse({
+      ...validPublicEnv,
+      NEXT_PUBLIC_SUPABASE_URL: 'not a url',
+    });
 
     expect(result.success).toBe(false);
   });
@@ -42,6 +51,10 @@ describe('serverEnvSchema', () => {
 
   it('defaults ALLOWED_EMAILS to an empty list', () => {
     expect(serverEnvSchema.parse({}).ALLOWED_EMAILS).toEqual([]);
+  });
+
+  it('treats empty optional values as unset', () => {
+    expect(serverEnvSchema.parse({ SUPABASE_SECRET_KEY: '' }).SUPABASE_SECRET_KEY).toBeUndefined();
   });
 
   it('rejects invalid emails and short cron secrets', () => {

@@ -16,7 +16,11 @@ Full spec: [docs/spec.md](docs/spec.md). Decisions that override the spec are li
 - Package manager: pnpm 12 (installed via npm; corepack on Node 22.18 can't install pnpm 12).
 - TypeScript 6.x until Next.js supports TypeScript 7 without `experimental.useTypeScriptCli`.
 - Supabase keys: `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` (legacy anon/service_role are deprecated).
-- Supabase: cloud project only (no local Docker stack). Migrations live in `supabase/migrations` and include explicit Data API `grant`s.
+- Supabase: cloud project only (no local Docker stack), project `scaffale`, ref `wacmcxumcgbpmquqiuos`, CLI linked.
+- Migrations live in `supabase/migrations` and include explicit Data API `grant`s. When applied through the Supabase MCP (`apply_migration`), rename the local file to the version reported by `list_migrations` so `supabase db push` stays in sync. Regenerate `src/lib/supabase/database.types.ts` after every schema change.
+- Auth config goes through `supabase/config.toml`: always run `supabase config diff` and review it before `supabase config push`.
+- Free tier + built-in SMTP: email templates cannot be edited, so magic links use PKCE `code` (same browser). `/auth/confirm` also supports `token_hash` for when custom SMTP is configured.
+- Protected pages live under `src/app/(app)`; use `getCurrentUser()` (`@/lib/auth/session`) in server code. It enforces `ALLOWED_EMAILS`.
 - Next.js 16: request interception lives in `src/proxy.ts` (not `middleware.ts`).
 - Env access goes through `publicEnv` (`@/lib/env`) and `serverEnv` (`@/lib/env.server`), validated by `src/lib/validation/env.ts`.
 - Vitest resolves `@/` via Vite 8's native `resolve.tsconfigPaths`.
