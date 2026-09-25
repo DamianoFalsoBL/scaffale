@@ -25,3 +25,6 @@ Full spec: [docs/spec.md](docs/spec.md). Decisions that override the spec are li
 - Next.js 16: request interception lives in `src/proxy.ts` (not `middleware.ts`).
 - Env access goes through `publicEnv` (`@/lib/env`) and `serverEnv` (`@/lib/env.server`), validated by `src/lib/validation/env.ts`.
 - Vitest resolves `@/` via Vite 8's native `resolve.tsconfigPaths`.
+- Catalog writes (`media_items`) only through `upsertMediaItem` (`src/lib/library/queries.ts`, secret key); user data through the user's client so RLS applies. Metadata on add is always re-fetched server-side.
+- Library filtering/sorting/stats are pure functions in `src/lib/library/views.ts` over the whole library (fine for a personal library; move to SQL if it grows past a few thousand entries).
+- Media type colors: violet (movie) / green (tv) / orange (book), validated with the dataviz palette validator; keep labels visible.

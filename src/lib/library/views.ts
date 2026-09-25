@@ -1,0 +1,105 @@
+import type { MediaType } from '@/lib/providers/types';
+import type { EntryStatus } from '@/lib/status-labels';
+
+import type { LibraryEntry } from './model';
+
+export type LibrarySort = 'added' | 'title' | 'rating' | 'year';
+
+export interface LibraryFilters {
+  type: MediaType | 'all';
+  status: EntryStatus | 'all';
+  q: string;
+}
+
+/** Lowercase, without accents: "Perché" matches "perche". */
+export function normalizeText(text: string) {
+  return text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .trim();
+}
+
+function searchableText(entry: LibraryEntry) {
+  const authors = Array.isArray(entry.item.extra.authors) ? entry.item.extra.authors : [];
+  return normalizeText([entry.item.title, entry.item.originalTitle ?? '', ...authors].join(' '));
+}
+
+export function filterEntries(entries: readonly LibraryEntry[], filters: LibraryFilters) {
+  const query = normalizeText(filters.q);
+
+  return entries.filter(
+    (entry) =>
+      (filters.type === 'all' || entry.item.mediaType === filters.type) &&
+      (filters.status === 'all' || entry.status === filters.status) &&
+      (!query || searchableText(entry).includes(query)),
+  );
+}
+
+const collator = new Intl.Collator('it', { sensitivity: 'base', numeric: true });
+
+/** Missing values (no rating, no year) always go last. */
+function compareNullable(a: number | null, b: number | null, direction: 1 | -1) {
+  if (a === b) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return (a - b) * direction;
+}
+
+export function sortEntries(entries: readonly LibraryEntry[], sort: LibrarySort): LibraryEntry[] {
+  const byTitle = (a: LibraryEntry, b: LibraryEntry) =>
+    collator.compare(a.item.title, b.item.title);
+  const byAdded = (a: LibraryEntry, b: LibraryEntry) => b.createdAt.localeCompare(a.createdAt);
+
+  const comparators: Record<LibrarySort, (a: LibraryEntry, b: LibraryEntry) => number> = {
+    added: byAdded,
+    title: byTitle,
+    rating: (a, b) => compareNullable(a.rating, b.rating, -1) || byTitle(a, b),
+    year: (a, b) => compareNullable(a.item.year, b.item.year, -1) || byTitle(a, b),
+  };
+
+  return [...entries].sort(comparators[sort]);
+}
+
+export interface DashboardData {
+  inProgress: LibraryEntry[];
+  planned: LibraryEntry[];
+  recentlyCompleted: LibraryEntry[];
+  completedByType: Record<MediaType, number>;
+  completedByYear: { year: number; movie: number; tv: number; book: number; total: number }[];
+  totals: { all: number; completed: number };
+}
+
+const completionDate = (entry: LibraryEntry) => entry.finishedAt ?? entry.updatedAt.slice(0, 10);
+
+export function buildDashboard(entries: readonly LibraryEntry[], limit = 12): DashboardData {
+  const completed = entries.filter((entry) => entry.status === 'completed');
+  const completedByType: Record<MediaType, number> = { movie: 0, tv: 0, book: 0 };
+  const byYear = new Map<number, DashboardData['completedByYear'][number]>();
+
+  for (const entry of completed) {
+    completedByType[entry.item.mediaType]++;
+    const year = Number(completionDate(entry).slice(0, 4));
+    const row = byYear.get(year) ?? { year, movie: 0, tv: 0, book: 0, total: 0 };
+    row[entry.item.mediaType]++;
+    row.total++;
+    byYear.set(year, row);
+  }
+
+  return {
+    inProgress: entries
+      .filter((entry) => entry.status === 'in_progress')
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .slice(0, limit),
+    planned: entries
+      .filter((entry) => entry.status === 'planned')
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, limit),
+    recentlyCompleted: [...completed]
+      .sort((a, b) => completionDate(b).localeCompare(completionDate(a)))
+      .slice(0, limit),
+    completedByType,
+    completedByYear: [...byYear.values()].sort((a, b) => b.year - a.year),
+    totals: { all: entries.length, completed: completed.length },
+  };
+}

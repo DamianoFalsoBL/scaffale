@@ -5,7 +5,15 @@ import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 
-export function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+export function NavLink({
+  href,
+  className,
+  children,
+}: {
+  href: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   const active = usePathname().startsWith(href);
 
   return (
@@ -15,6 +23,7 @@ export function NavLink({ href, children }: { href: string; children: React.Reac
       className={cn(
         'text-sm transition-colors hover:text-foreground',
         active ? 'font-medium text-foreground' : 'text-muted-foreground',
+        className,
       )}
     >
       {children}

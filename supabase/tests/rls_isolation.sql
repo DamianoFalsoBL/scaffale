@@ -30,7 +30,8 @@ begin
   if (select count(*) from public.user_entries) <> 1 then
     raise exception 'FAIL: user A should see exactly 1 entry';
   end if;
-  if (select count(*) from public.media_items) <> 2 then
+  -- Only the test rows: the real catalog may contain other items.
+  if (select count(*) from public.media_items where id::text like '00000000-0000-4000-b000-%') <> 2 then
     raise exception 'FAIL: signed-in users should read the whole catalog';
   end if;
 end $$;

@@ -1,11 +1,17 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { getCurrentUser } from '@/lib/auth/session';
-import { search } from '@/lib/providers';
+import { markLibraryEntries, type SearchResultWithLibrary } from '@/lib/library/matching';
+import { getLibraryIndex } from '@/lib/library/queries';
+import { search, type UnifiedSearchResult } from '@/lib/providers';
 import { SearchUnavailableError } from '@/lib/providers/search';
 import { searchQuerySchema } from '@/lib/validation/search';
 
 const NO_STORE = { 'Cache-Control': 'private, no-store' };
+
+export type SearchResponse = Omit<UnifiedSearchResult, 'results'> & {
+  results: SearchResultWithLibrary[];
+};
 
 export async function GET(request: NextRequest) {
   // Keeps our API quotas for signed-in users only.
@@ -21,8 +27,9 @@ export async function GET(request: NextRequest) {
   const { q, type, page } = parsed.data;
 
   try {
-    const result = await search(q, type, page);
-    return NextResponse.json(result, { headers: NO_STORE });
+    const [result, index] = await Promise.all([search(q, type, page), getLibraryIndex()]);
+    const body: SearchResponse = { ...result, results: markLibraryEntries(result.results, index) };
+    return NextResponse.json(body, { headers: NO_STORE });
   } catch (error) {
     console.error('Search failed', {
       error: error instanceof SearchUnavailableError ? error.cause : error,

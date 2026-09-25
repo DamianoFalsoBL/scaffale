@@ -3,26 +3,28 @@
 import { AlertCircle, Loader2, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import type { SearchResponse } from '@/app/api/search/route';
+import { AddToLibrary } from '@/components/add-to-library';
 import { MediaCard, MediaCardSkeleton } from '@/components/media-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { SEARCH_FILTER_LABELS } from '@/lib/media-labels';
-import type { NormalizedMedia } from '@/lib/providers/types';
-import type { SearchFilter, UnifiedSearchResult } from '@/lib/providers/search';
+import type { SearchResultWithLibrary } from '@/lib/library/matching';
+import type { SearchFilter } from '@/lib/providers/search';
 import { SEARCH_FILTERS } from '@/lib/validation/search';
 
 const MIN_QUERY_LENGTH = 2;
 const DEBOUNCE_MS = 300;
 
-const UNAVAILABLE_MESSAGES: Record<UnifiedSearchResult['unavailable'][number], string> = {
+const UNAVAILABLE_MESSAGES: Record<SearchResponse['unavailable'][number], string> = {
   screen: 'Film e serie non sono disponibili al momento.',
   books: 'I libri non sono disponibili al momento.',
 };
 
 type SearchState =
-  | ({ key: string; status: 'done'; loadingMore: boolean } & UnifiedSearchResult)
+  | ({ key: string; status: 'done'; loadingMore: boolean } & SearchResponse)
   | { key: string; status: 'error'; message: string };
 
 class SearchRequestError extends Error {
@@ -45,12 +47,16 @@ async function fetchSearch(q: string, type: SearchFilter, page: number, signal?:
   if (!response.ok) {
     throw new SearchRequestError(response.status);
   }
-  return (await response.json()) as UnifiedSearchResult;
+  return (await response.json()) as SearchResponse;
 }
 
-const mediaKey = (media: NormalizedMedia) => `${media.source}:${media.externalId}`;
+const mediaKey = (media: SearchResultWithLibrary) => `${media.source}:${media.externalId}`;
 
-function appendUnique(current: NormalizedMedia[], next: NormalizedMedia[]) {
+function authorsOf(media: SearchResultWithLibrary) {
+  return Array.isArray(media.extra.authors) ? (media.extra.authors as string[]) : [];
+}
+
+function appendUnique(current: SearchResultWithLibrary[], next: SearchResultWithLibrary[]) {
   const seen = new Set(current.map(mediaKey));
   return [...current, ...next.filter((media) => !seen.has(mediaKey(media)))];
 }
@@ -184,7 +190,13 @@ export function SearchView({
           ) : (
             <ResultsGrid>
               {current.results.map((media) => (
-                <MediaCard key={mediaKey(media)} media={media} />
+                <MediaCard
+                  key={mediaKey(media)}
+                  media={{ ...media, authors: authorsOf(media) }}
+                  href={media.library ? `/item/${media.library.mediaItemId}` : undefined}
+                >
+                  <AddToLibrary media={media} />
+                </MediaCard>
               ))}
             </ResultsGrid>
           )}

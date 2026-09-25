@@ -14,7 +14,11 @@ export function AppHeader({ email }: { email: string }) {
           <Link href="/dashboard" className="text-lg font-semibold tracking-tight">
             Scaffale
           </Link>
-          <NavLink href="/dashboard">Dashboard</NavLink>
+          {/* On phones the brand already links to the dashboard. */}
+          <NavLink href="/dashboard" className="hidden sm:inline">
+            Dashboard
+          </NavLink>
+          <NavLink href="/library">Libreria</NavLink>
           <NavLink href="/search">Cerca</NavLink>
         </nav>
         <div className="flex items-center gap-2">

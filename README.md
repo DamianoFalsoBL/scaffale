@@ -2,7 +2,7 @@
 
 Tracker personale di film, serie TV e libri. Uso personale, non commerciale.
 
-Stato: **Fase 2** (adapter TMDB / Google Books / Open Library e ricerca unificata). Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
+Stato: **Fase 3** (libreria, dettaglio, dashboard). MVP completo in locale; deploy in Fase 4. Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
 
 ## Stack
 
@@ -146,7 +146,7 @@ Lo schema sta in [supabase/migrations](supabase/migrations). Le migrazioni sono 
 - `anon` non possa leggere nulla;
 - un film non possa essere `in_progress`.
 
-Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incollalo nel SQL editor della dashboard: se stampa `RLS isolation: all checks passed` è tutto ok, altrimenti l'errore dice quale controllo è fallito. Ultima esecuzione: 25/09/2026, superato.
+Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incollalo nel SQL editor della dashboard: se stampa `RLS isolation: all checks passed` è tutto ok, altrimenti l'errore dice quale controllo è fallito. Ultima esecuzione: 25/09/2026 (dopo la Fase 3), superato.
 
 ## Autenticazione
 
@@ -161,6 +161,15 @@ Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incolla
   - l'SMTP integrato invia solo agli indirizzi dei membri dell'organizzazione Supabase, con pochi invii all'ora.
 
   Con un SMTP personalizzato (valutazione in Fase 4) si potrà usare un template con `token_hash`, già supportato da `/auth/confirm`, che funziona su qualsiasi dispositivo.
+
+## Libreria
+
+- **Aggiunta dalla ricerca:** "Aggiungi" apre un menu con gli stati ammessi per il tipo (tabella della specifica, in `src/lib/status-labels.ts`; niente "In corso"/"In pausa" per i film). La Server Action `addToLibrary` riscarica i metadati dal provider lato server, salva la scheda in `media_items` con la secret key (riusando la scheda esistente con lo stesso ISBN-13 per i libri) e crea la voce in `user_entries` con il client dell'utente (RLS). I risultati già in libreria mostrano lo stato e portano al dettaglio.
+- **Date automatiche:** "In corso" → inizio = oggi (se vuoto); "Visto/Letto/Completata" → fine = oggi (se vuota) e almeno 1 visione/lettura. Fuso orario Europe/Rome. Sempre modificabili.
+- **`/library`:** schede Tutti/Film/Serie/Libri con conteggi, filtro per stato, ordinamento (aggiunti di recente, titolo, voto, anno), ricerca per titolo, titolo originale e autore (senza accenti), vista griglia o lista, tutto nell'URL. Cambio di stato direttamente dalla card, con aggiornamento ottimistico.
+- **`/item/[id]`** (id della scheda in `media_items`): metadati dalla scheda salvata (durata e tagline, stagioni ed episodi, autori, pagine, editore, ISBN), stato, voto a mezze stelle (salvato 1–10, usabile anche da tastiera), date, contatore visioni/letture, note, rimozione con conferma. La scheda condivisa resta nel catalogo.
+- **`/dashboard`:** completati per tipo, "In corso", "Da vedere e da leggere", "Completati di recente", completati per anno.
+- **Colori dei tipi:** Film viola, Serie TV verde, Libri arancio: controllati con il validatore di palette (anche per daltonismo, modalità chiara e scura); l'etichetta resta sempre scritta.
 
 ## Ricerca e fonti esterne
 
@@ -204,10 +213,10 @@ Su alcune reti le connessioni **IPv6** verso CloudFront (la CDN di TMDB) vengono
 ```
 src/
   proxy.ts           # Refresh della sessione + protezione delle route
-  actions/           # Server Actions (auth: login con magic link, logout)
+  actions/           # Server Actions: auth (magic link, logout), library (aggiungi, modifica, rimuovi)
   app/
     (auth)/login/    # Pagina di login
-    (app)/           # Area protetta: layout con header, dashboard, ricerca (/search)
+    (app)/           # Area protetta: dashboard, library, item/[id], search
     api/search/      # Route della ricerca unificata
     auth/confirm/    # Route di atterraggio del magic link
   components/        # Componenti dell'app (ThemeProvider, ThemeToggle…)
@@ -218,6 +227,7 @@ src/
     validation/      # Schemi Zod (+ test)
     providers/       # Adapter TMDB / Google Books / Open Library, client HTTP con retry, ricerca unificata
     auth/            # Allowlist e utente corrente (getCurrentUser)
+    library/         # Modello, filtri/ordinamento/statistiche (puri, testati), query e salvataggio catalogo
     supabase/        # Client browser/server/admin, refresh sessione nel proxy, tipi generati
 supabase/
   config.toml        # Config della CLI Supabase
