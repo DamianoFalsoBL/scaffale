@@ -13,6 +13,8 @@ Full spec: [docs/spec.md](docs/spec.md). Decisions that override the spec are li
 
 ## Decisions (override the spec)
 
+- Production domain: `scaffale.damianofalso.com` (not media.damianofalso.com as in spec §11).
+
 - Package manager: pnpm 12 (installed via npm; corepack on Node 22.18 can't install pnpm 12).
 - TypeScript 6.x until Next.js supports TypeScript 7 without `experimental.useTypeScriptCli`.
 - Supabase keys: `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` (legacy anon/service_role are deprecated).
