@@ -1,3 +1,4 @@
+import { isAuthError } from '@supabase/supabase-js';
 import { redirect } from 'next/navigation';
 import type { NextRequest } from 'next/server';
 
@@ -17,15 +18,23 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
 
   const supabase = await createClient();
-  let failed = true;
+  let error: unknown = new Error('Missing code or token_hash');
 
   if (tokenHash && type.success) {
-    const { error } = await supabase.auth.verifyOtp({ type: type.data, token_hash: tokenHash });
-    failed = !!error;
+    ({ error } = await supabase.auth.verifyOtp({ type: type.data, token_hash: tokenHash }));
   } else if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    failed = !!error;
+    ({ error } = await supabase.auth.exchangeCodeForSession(code));
   }
 
-  redirect(failed ? '/login?error=link_invalid' : '/dashboard');
+  if (!error) {
+    redirect('/dashboard');
+  }
+
+  const errorCode = isAuthError(error) ? error.code : undefined;
+  console.error('Magic link confirmation failed', { code: errorCode });
+
+  // The PKCE verifier cookie lives only in the browser that requested the link.
+  const reason = errorCode === 'pkce_code_verifier_not_found' ? 'other_browser' : 'link_invalid';
+
+  redirect(`/login?error=${reason}`);
 }

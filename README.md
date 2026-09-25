@@ -152,10 +152,11 @@ Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incolla
 - Login solo con **magic link** (`/login`). Il link porta a `/auth/confirm`, che crea la sessione e rimanda a `/dashboard`.
 - `src/proxy.ts` rinnova la sessione a ogni richiesta e manda a `/login` chi non è autenticato. Il layout `(app)` ricontrolla la sessione e applica `ALLOWED_EMAILS`.
 - Il form risponde sempre "controlla la tua email", anche per indirizzi non autorizzati, così non rivela quali account esistono.
-- **Registrazioni chiuse** su Supabase dopo la creazione del primo account (`enable_signup = false` in `supabase/config.toml`).
+- **Registrazioni chiuse** su Supabase (`enable_signup = false` in `supabase/config.toml`), attive dal 25/09/2026 dopo la creazione del primo account. Verifica: una chiamata diretta a `POST /auth/v1/signup` con la publishable key risponde `422 signup_disabled`.
+- Per aggiungere un altro utente: aggiungi l'email ad `ALLOWED_EMAILS`, riapri temporaneamente le registrazioni (`enable_signup = true`, diff + push), fai il primo accesso e poi richiudile.
 - Sul piano free con l'SMTP integrato di Supabase:
   - i template email non si possono personalizzare, quindi l'email è in inglese;
-  - il link usa il flusso PKCE (`?code=`) e va aperto **nello stesso browser** in cui l'hai richiesto;
+  - il link usa il flusso PKCE (`?code=`) e va aperto **nello stesso browser** in cui l'hai richiesto (per esempio non nel browser integrato di Claude se Gmail apre i link in Chrome). Se succede, la pagina di login lo spiega;
   - l'SMTP integrato invia solo agli indirizzi dei membri dell'organizzazione Supabase, con pochi invii all'ora.
 
   Con un SMTP personalizzato (valutazione in Fase 4) si potrà usare un template con `token_hash`, già supportato da `/auth/confirm`, che funziona su qualsiasi dispositivo.

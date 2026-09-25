@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 
 const ERROR_MESSAGES: Record<string, string> = {
   link_invalid: 'Il link non è valido o è scaduto. Richiedine uno nuovo.',
+  other_browser:
+    'Apri il link nello stesso browser in cui l’hai richiesto. Richiedine uno nuovo da qui.',
 };
 
 export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
