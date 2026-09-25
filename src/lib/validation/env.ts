@@ -1,0 +1,34 @@
+import { z } from 'zod';
+
+// Empty values copied from .env.example must behave like unset variables.
+const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
+
+const optional = <T extends z.ZodType>(schema: T) =>
+  z.preprocess(emptyToUndefined, schema.optional());
+
+export const publicEnvSchema = z.object({
+  NEXT_PUBLIC_SUPABASE_URL: optional(z.url()),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(1)),
+  NEXT_PUBLIC_SITE_URL: z.preprocess(emptyToUndefined, z.url().default('http://localhost:3000')),
+});
+
+// Server variables stay optional until the phase that needs them makes them required.
+export const serverEnvSchema = z.object({
+  SUPABASE_SECRET_KEY: optional(z.string().min(1)),
+  TMDB_READ_ACCESS_TOKEN: optional(z.string().min(1)),
+  GOOGLE_BOOKS_API_KEY: optional(z.string().min(1)),
+  CRON_SECRET: optional(z.string().min(16)),
+  ALLOWED_EMAILS: z
+    .string()
+    .optional()
+    .transform((value) =>
+      (value ?? '')
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.email())),
+});
+
+export type PublicEnv = z.infer<typeof publicEnvSchema>;
+export type ServerEnv = z.infer<typeof serverEnvSchema>;
