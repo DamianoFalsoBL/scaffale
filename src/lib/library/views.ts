@@ -75,11 +75,12 @@ export function sortEntries(entries: readonly LibraryEntry[], sort: LibrarySort)
 
 export interface DashboardData {
   inProgress: LibraryEntry[];
+  onHold: LibraryEntry[];
   planned: LibraryEntry[];
   recentlyCompleted: LibraryEntry[];
   completedByType: Record<MediaType, number>;
   completedByYear: { year: number; movie: number; tv: number; book: number; total: number }[];
-  totals: { all: number; completed: number };
+  totals: { all: number; completed: number; inProgress: number; onHold: number; planned: number };
 }
 
 const completionDate = (entry: LibraryEntry) => entry.finishedAt ?? entry.updatedAt.slice(0, 10);
@@ -98,20 +99,29 @@ export function buildDashboard(entries: readonly LibraryEntry[], limit = 12): Da
     byYear.set(year, row);
   }
 
+  const byStatus = (status: LibraryEntry['status']) =>
+    entries.filter((entry) => entry.status === status);
+  const recentlyTouched = (list: LibraryEntry[]) =>
+    list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, limit);
+  const inProgress = byStatus('in_progress');
+  const onHold = byStatus('on_hold');
+  const planned = byStatus('planned');
+
   return {
-    inProgress: entries
-      .filter((entry) => entry.status === 'in_progress')
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-      .slice(0, limit),
-    planned: entries
-      .filter((entry) => entry.status === 'planned')
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-      .slice(0, limit),
+    inProgress: recentlyTouched(inProgress),
+    onHold: recentlyTouched(onHold),
+    planned: [...planned].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit),
     recentlyCompleted: [...completed]
       .sort((a, b) => completionDate(b).localeCompare(completionDate(a)))
       .slice(0, limit),
     completedByType,
     completedByYear: [...byYear.values()].sort((a, b) => b.year - a.year),
-    totals: { all: entries.length, completed: completed.length },
+    totals: {
+      all: entries.length,
+      completed: completed.length,
+      inProgress: inProgress.length,
+      onHold: onHold.length,
+      planned: planned.length,
+    },
   };
 }

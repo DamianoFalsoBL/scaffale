@@ -114,22 +114,29 @@ function CompletedByYear({ rows }: { rows: DashboardData['completedByYear'] }) {
   );
 }
 
-function summary({ inProgress, planned }: { inProgress: number; planned: number }) {
+function summary({
+  inProgress,
+  onHold,
+  planned,
+}: {
+  inProgress: number;
+  onHold: number;
+  planned: number;
+}) {
   const parts = [
     inProgress > 0 && `${inProgress} ${inProgress === 1 ? 'titolo' : 'titoli'} in corso`,
+    onHold > 0 && `${onHold} in pausa`,
     planned > 0 && `${planned} da recuperare`,
-  ].filter(Boolean);
-  return parts.length > 0 ? `Hai ${parts.join(' e ')}.` : 'Cosa guardi o leggi oggi?';
+  ].filter((part): part is string => !!part);
+  if (parts.length === 0) return 'Cosa guardi o leggi oggi?';
+  const list = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} e ${parts.at(-1)}` : parts[0];
+  return `Hai ${list}.`;
 }
 
 export default async function DashboardPage() {
   const entries = await getLibrary();
   const dashboard = buildDashboard(entries);
-  const counts = {
-    inProgress: entries.filter((e) => e.status === 'in_progress').length,
-    planned: entries.filter((e) => e.status === 'planned').length,
-    completed: dashboard.totals.completed,
-  };
+  const counts = dashboard.totals;
 
   if (entries.length === 0) {
     return (
@@ -186,6 +193,16 @@ export default async function DashboardPage() {
         large
         empty="Niente in corso. Metti una serie o un libro “In corso” per ritrovarlo qui."
       />
+      {/* Paused titles get their own shelf only when there are some. */}
+      {dashboard.onHold.length > 0 && (
+        <Section
+          title="In pausa"
+          href="/library?status=on_hold"
+          entries={dashboard.onHold}
+          total={counts.onHold}
+          empty=""
+        />
+      )}
       <Section
         title="Da vedere e da leggere"
         href="/library?status=planned"

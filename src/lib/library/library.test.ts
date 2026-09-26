@@ -231,6 +231,7 @@ describe('buildDashboard', () => {
       entry({ status: 'completed', finishedAt: '2026-04-01', item: { mediaType: 'book' } }),
       entry({ status: 'in_progress', item: { mediaType: 'tv' } }),
       entry({ status: 'planned' }),
+      entry({ status: 'on_hold', item: { mediaType: 'tv' } }),
     ];
 
     const dashboard = buildDashboard(entries);
@@ -243,7 +244,14 @@ describe('buildDashboard', () => {
     expect(dashboard.recentlyCompleted[0]?.finishedAt).toBe('2026-04-01');
     expect(dashboard.inProgress).toHaveLength(1);
     expect(dashboard.planned).toHaveLength(1);
-    expect(dashboard.totals).toEqual({ all: 5, completed: 3 });
+    expect(dashboard.onHold).toHaveLength(1);
+    expect(dashboard.totals).toEqual({
+      all: 6,
+      completed: 3,
+      inProgress: 1,
+      onHold: 1,
+      planned: 1,
+    });
   });
 });
 
