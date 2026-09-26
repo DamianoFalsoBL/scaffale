@@ -2,7 +2,7 @@
 
 Tracker personale di film, serie TV e libri. Uso personale, non commerciale.
 
-Stato: **Fase 4** in corso (cron, attribuzione, deploy su `scaffale.damianofalso.com`). Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
+Stato: **Fase 4 completata**: online su https://scaffale.damianofalso.com. Prossimi passi: veste grafica, scheda dettagli (anteprima + dettaglio ricco), ricerca per persona, PWA. Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
 
 ## Stack
 
