@@ -1,6 +1,8 @@
 import 'server-only';
 
 import { serverEnv } from '@/lib/env.server';
+import { todayIso } from '@/lib/library/model';
+import type { SearchFilters } from '@/lib/search-filters';
 
 import { createGoogleBooksProvider } from './google-books';
 import { createOpenLibraryProvider } from './open-library';
@@ -16,6 +18,7 @@ function buildDeps(): SearchDeps {
   return {
     tmdb,
     people: tmdb ? (query, page) => tmdb.searchPeople(query, page) : undefined,
+    discover: tmdb ? (type, params) => tmdb.discover(type, params) : undefined,
     google: serverEnv.GOOGLE_BOOKS_API_KEY
       ? createGoogleBooksProvider({ apiKey: serverEnv.GOOGLE_BOOKS_API_KEY })
       : undefined,
@@ -32,8 +35,8 @@ function buildDeps(): SearchDeps {
 
 const deps = buildDeps();
 
-export function search(query: string, type: SearchFilter, page: number) {
-  return searchMedia({ query, type, page }, deps);
+export function search(query: string, type: SearchFilter, page: number, filters?: SearchFilters) {
+  return searchMedia({ query, type, page, filters, today: todayIso() }, deps);
 }
 
 export function getDetails(
@@ -78,4 +81,4 @@ export type {
   WatchProvider,
   WatchProviders,
 } from './tmdb';
-export type { SearchFilter, UnifiedSearchResult } from './search';
+export type { SearchFilter, SearchNote, UnifiedSearchResult } from './search';

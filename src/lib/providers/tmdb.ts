@@ -38,6 +38,8 @@ export const tmdbMovieResultSchema = z.object({
   poster_path: posterPath,
   overview: optionalText,
   genre_ids: genreIds,
+  vote_average: z.number().optional(),
+  vote_count: z.number().int().optional(),
 });
 
 export const tmdbTvResultSchema = z.object({
@@ -48,6 +50,8 @@ export const tmdbTvResultSchema = z.object({
   poster_path: posterPath,
   overview: optionalText,
   genre_ids: genreIds,
+  vote_average: z.number().optional(),
+  vote_count: z.number().int().optional(),
 });
 
 const multiResultSchema = z.discriminatedUnion('media_type', [
@@ -188,6 +192,12 @@ function namesFor(ids: readonly number[] | undefined, genreNames: GenreNames) {
   });
 }
 
+function ratingOf(item: { vote_average?: number; vote_count?: number }) {
+  return item.vote_average !== undefined && item.vote_count
+    ? { average: item.vote_average, count: item.vote_count }
+    : undefined;
+}
+
 /** An original title equal to the localized one adds nothing. */
 function distinct(original: string | null | undefined, title: string) {
   const value = nonEmpty(original);
@@ -205,6 +215,8 @@ export function mapTmdbMovieResult(item: TmdbMovieResult, genreNames: GenreNames
     posterUrl: tmdbPosterUrl(item.poster_path, 'w342'),
     overview: nonEmpty(item.overview),
     genres: namesFor(item.genre_ids, genreNames),
+    genreIds: item.genre_ids,
+    rating: ratingOf(item),
     extra: {},
   };
 }
@@ -220,6 +232,8 @@ export function mapTmdbTvResult(item: TmdbTvResult, genreNames: GenreNames): Nor
     posterUrl: tmdbPosterUrl(item.poster_path, 'w342'),
     overview: nonEmpty(item.overview),
     genres: namesFor(item.genre_ids, genreNames),
+    genreIds: item.genre_ids,
+    rating: ratingOf(item),
     extra: {},
   };
 }
@@ -644,30 +658,46 @@ export function createTmdbProvider({
     return new Map([...movie.genres, ...tv.genres].map((genre) => [genre.id, genre.name]));
   }
 
-  async function searchEndpoint(query: string, type: MediaType | undefined, page: number) {
+  async function searchEndpoint(
+    query: string,
+    type: MediaType | undefined,
+    page: number,
+    year: number | undefined,
+  ) {
     const params = { query, page: String(page), include_adult: 'false' };
+    // Exact year only: ranges are filtered by the caller.
+    const yearParam = (key: string): Record<string, string> =>
+      year !== undefined ? { [key]: String(year) } : {};
 
     if (type === 'movie') {
       return request(
         '/search/movie',
-        { ...params, region: REGION },
+        { ...params, region: REGION, ...yearParam('primary_release_year') },
         searchResponseSchema,
         SEARCH_REVALIDATE,
       );
     }
     if (type === 'tv') {
-      return request('/search/tv', params, searchResponseSchema, SEARCH_REVALIDATE);
+      return request(
+        '/search/tv',
+        { ...params, ...yearParam('first_air_date_year') },
+        searchResponseSchema,
+        SEARCH_REVALIDATE,
+      );
     }
     return request('/search/multi', params, searchResponseSchema, SEARCH_REVALIDATE);
   }
 
   const provider = {
-    async search(query, { type, page = 1 } = {}): Promise<SearchPage> {
+    async search(query, { type, page = 1, year } = {}): Promise<SearchPage> {
       if (type === 'book') {
         return EMPTY_PAGE(page);
       }
 
-      const [data, genres] = await Promise.all([searchEndpoint(query, type, page), genreNames()]);
+      const [data, genres] = await Promise.all([
+        searchEndpoint(query, type, page, year),
+        genreNames(),
+      ]);
 
       let results: NormalizedMedia[];
       if (type === 'movie') {
@@ -740,6 +770,23 @@ export function createTmdbProvider({
         genreNames(),
       ]);
       return mapTitleExtras(raw, type, genres);
+    },
+
+    /** TMDB Discover: titles by criteria, no text (params from discoverParams). */
+    async discover(type: 'movie' | 'tv', params: Record<string, string>): Promise<SearchPage> {
+      const [data, genres] = await Promise.all([
+        request(`/discover/${type}`, params, searchResponseSchema, SEARCH_REVALIDATE),
+        genreNames(),
+      ]);
+      const results =
+        type === 'movie'
+          ? parseItems(data.results, tmdbMovieResultSchema).map((item) =>
+              mapTmdbMovieResult(item, genres),
+            )
+          : parseItems(data.results, tmdbTvResultSchema).map((item) =>
+              mapTmdbTvResult(item, genres),
+            );
+      return { results, page: data.page, hasMore: data.page < data.total_pages };
     },
 
     async searchPeople(query: string, page = 1) {

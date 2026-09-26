@@ -24,10 +24,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'invalid_query' }, { status: 400, headers: NO_STORE });
   }
 
-  const { q, type, page } = parsed.data;
+  const { q, type, page, ...filters } = parsed.data;
 
   try {
-    const [result, index] = await Promise.all([search(q, type, page), getLibraryIndex()]);
+    const [result, index] = await Promise.all([search(q, type, page, filters), getLibraryIndex()]);
     const body: SearchResponse = { ...result, results: markLibraryEntries(result.results, index) };
     return NextResponse.json(body, { headers: NO_STORE });
   } catch (error) {

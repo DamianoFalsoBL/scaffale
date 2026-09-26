@@ -2,7 +2,7 @@
 
 Tracker personale di film, serie TV e libri. Uso personale, non commerciale.
 
-Stato: **Fase 4 completata**: online su https://scaffale.damianofalso.com. Prossimi passi: veste grafica, scheda dettagli (anteprima + dettaglio ricco), ricerca per persona, PWA. Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
+Stato: **Fase 4 completata**: online su https://scaffale.damianofalso.com. Fatti anche veste grafica, scheda dettagli, ricerca per persona e filtri/Esplora. Prossimo passo: PWA. Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
 
 ## Stack
 
@@ -172,6 +172,7 @@ Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incolla
 - **Anteprima `/title/[fonte]/[tipo]/[id]`:** dal pulsante "Dettagli" (o da poster e titolo) nei risultati di ricerca. Mostra la stessa scheda del dettaglio (componente `TitleDetails`) con i dati presi al momento dal provider (cache di 24 ore) e il pulsante "Aggiungi"; dopo l'aggiunta porta alla scheda completa. Se il titolo è già in libreria (stesso id o, per i libri, stesso ISBN) rimanda a `/item/[id]`; parametri non validi o titoli inesistenti danno 404.
 - **Scheda ricca (film e serie):** sotto la scheda, caricate in streaming (`<Suspense>`) con una sola chiamata TMDB (`append_to_response` con crediti, `watch/providers` e `recommendations`, cache 24 ore): **Regia/Ideazione e cast** con foto, **Dove vederlo in Italia** (abbonamento, gratis, noleggio, acquisto, con l'attribuzione **JustWatch** richiesta da TMDB e il link alle offerte) e **Titoli simili**. Gli autori dei libri portano agli altri loro libri.
 - **Persone:** filtro "Persone" nella ricerca e, in "Tutti", una riga con le prime 6 persone trovate. `/person/[id]` mostra biografia (in inglese se manca in italiano), date e filmografia divisa in **Regia** e **Recitazione** (senza interviste, talk show e filmati d'archivio), dalla più recente, con i titoli già in libreria segnati.
+- **Filtri ed Esplora:** pulsante "Filtri" sotto la barra di ricerca con genere (elenco adatto al tipo scelto), anno da/a, voto minimo TMDB, piattaforma in Italia (Netflix, Prime Video, Disney+, Apple TV, NOW, Sky Go, Paramount+, RaiPlay, Mediaset Infinity, TIMvision) e ordinamento. Con la barra vuota parte **Esplora** (TMDB Discover su film e serie: più popolari, voto più alto, più recenti); con del testo i filtri restringono i risultati. Tutto finisce nell'URL e i filtri attivi compaiono come chip rimovibili.
 - **Ricerca nella libreria per persona:** regia/ideazione e i 5 attori principali vengono salvati nella scheda del titolo, quindi "villeneuve" o "zendaya" trovano i titoli anche nella tua libreria.
 - **`/item/[id]`** (id della scheda in `media_items`): metadati dalla scheda salvata (durata e tagline, stagioni ed episodi, autori, pagine, editore, ISBN), stato, voto a mezze stelle (salvato 1–10, usabile anche da tastiera), date, contatore visioni/letture, note, rimozione con conferma. La scheda condivisa resta nel catalogo.
 - **`/dashboard`:** completati per tipo, "In corso", "Da vedere e da leggere", "Completati di recente", completati per anno.
@@ -189,7 +190,9 @@ Tutte le chiamate alle API esterne partono **solo dal server** (`src/lib/provide
 
 - **Retry:** su 429 e 5xx fino a 2 nuovi tentativi, rispettando `Retry-After` (massimo 5 s) o con backoff esponenziale; timeout di 8 s.
 - **Cache (fetch di Next):** 10 minuti per le ricerche, 24 ore per i dettagli.
-- **`GET /api/search?q=&type=all|movie|tv|book&page=`:** richiede una sessione (401 altrimenti). In "Tutti" alterna film/serie e libri; se una fonte non risponde restituisce comunque l'altra, con `unavailable` valorizzato.
+- **`GET /api/search?q=&type=all|movie|tv|book|person&page=&genre=&from=&to=&rating=&provider=&sort=`:** richiede una sessione (401 altrimenti). In "Tutti" alterna film/serie e libri; se una fonte non risponde restituisce comunque l'altra, con `unavailable` valorizzato. Valori non validi dei filtri vengono ignorati (`src/lib/search-filters.ts`, cataloghi in `src/lib/catalogs.ts`).
+- **Esplora (`q` vuoto):** `/discover/movie` e `/discover/tv` con genere (`with_genres`), date di uscita, `vote_average.gte`, piattaforma (`with_watch_providers` + `watch_region=IT`, abbonamento o gratis). Soglie di voti per evitare titoli sconosciuti: 10 (più recenti), 50 (serie popolari), 100 (voto minimo), 300 (voto più alto); le serie escludono news, soap e talk show. Solo film e serie: Google Books non ha un elenco per genere utilizzabile (con `subject:` ignora `langRestrict` e l'ordine è casuale), quindi per i libri serve un testo.
+- **Filtri con del testo:** l'anno esatto va a TMDB (`primary_release_year` / `first_air_date_year`), il resto (intervallo di anni, genere, voto con almeno 10 voti) filtra i risultati; se una pagina resta vuota ne legge fino a 2 in più. Per i libri il genere diventa `subject:"…"` nella query. La piattaforma vale solo in Esplora; voto e piattaforma escludono i libri da "Tutti" (la pagina lo spiega).
 - **Pagina `/search`:** debounce di 300 ms, filtri salvati nell'URL, "Carica altri". Le copertine usano `next/image` con `unoptimized`, perché i CDN servono già immagini ridimensionate.
 - **Test:** `tests/fixtures/` contiene risposte **reali** (ridotte) registrate il 25/09/2026.
 

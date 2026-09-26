@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, Loader2, Search } from 'lucide-react';
+import { AlertCircle, Loader2, Search, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import type { SearchResponse } from '@/app/api/search/route';
@@ -16,10 +16,27 @@ import { SEARCH_FILTER_LABELS } from '@/lib/media-labels';
 import type { SearchResultWithLibrary } from '@/lib/library/matching';
 import type { SearchFilter } from '@/lib/providers/search';
 import type { PersonSummary } from '@/lib/providers/tmdb';
-import { SEARCH_FILTERS } from '@/lib/validation/search';
+import {
+  countActiveFilters,
+  filtersForType,
+  filtersToEntries,
+  SORT_LABELS,
+  type SearchFilters,
+} from '@/lib/search-filters';
+import { MIN_QUERY_LENGTH, SEARCH_FILTERS } from '@/lib/validation/search';
 
-const MIN_QUERY_LENGTH = 2;
+import { ActiveFilterChips, SearchFiltersPanel } from './search-filters-panel';
+
 const DEBOUNCE_MS = 300;
+
+const NOTE_MESSAGES: Record<SearchResponse['notes'][number], string> = {
+  books_need_query:
+    'Esplora vale per film e serie. Per i libri scrivi un titolo o un autore: genere e anno restringono i risultati.',
+  books_skipped:
+    'I libri non compaiono: voto, piattaforma e alcuni generi valgono solo per film e serie.',
+  provider_explore_only:
+    'Il filtro piattaforma vale solo in Esplora, cioè con la barra di ricerca vuota.',
+};
 
 const UNAVAILABLE_MESSAGES: Record<SearchResponse['unavailable'][number], string> = {
   screen: 'Film e serie non sono disponibili al momento.',
@@ -43,8 +60,17 @@ function errorMessage(error: unknown) {
   return 'La ricerca non è disponibile al momento. Riprova tra poco.';
 }
 
-async function fetchSearch(q: string, type: SearchFilter, page: number, signal?: AbortSignal) {
+async function fetchSearch(
+  q: string,
+  type: SearchFilter,
+  filters: SearchFilters,
+  page: number,
+  signal?: AbortSignal,
+) {
   const params = new URLSearchParams({ q, type, page: String(page) });
+  if (type !== 'person') {
+    for (const [key, value] of filtersToEntries(filters)) params.set(key, value);
+  }
   const response = await fetch(`/api/search?${params}`, { signal });
 
   if (!response.ok) {
@@ -72,17 +98,26 @@ function personDetail(person: PersonSummary) {
 export function SearchView({
   initialQuery,
   initialType,
+  initialFilters,
 }: {
   initialQuery: string;
   initialType: SearchFilter;
+  initialFilters: SearchFilters;
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [type, setType] = useState<SearchFilter>(initialType);
+  const [filters, setFilters] = useState(initialFilters);
+  const [showFilters, setShowFilters] = useState(countActiveFilters(initialFilters) > 0);
   const [state, setState] = useState<SearchState>();
 
   const q = useDebouncedValue(query, DEBOUNCE_MS).trim();
-  const active = q.length >= MIN_QUERY_LENGTH;
-  const key = `${type}:${q}`;
+  // Empty query = Esplora (popular titles, narrowed by the filters).
+  const explore = q === '' && type !== 'person';
+  const active = explore || q.length >= MIN_QUERY_LENGTH;
+  const filterQuery =
+    type === 'person' ? '' : String(new URLSearchParams(filtersToEntries(filters)));
+  const activeFilters = countActiveFilters(filters);
+  const key = `${type}:${q}:${filterQuery}`;
   // Results belong to a query: ignore state left over from a previous one.
   const current = state?.key === key ? state : undefined;
 
@@ -90,9 +125,10 @@ export function SearchView({
     const params = new URLSearchParams();
     if (q) params.set('q', q);
     if (type !== 'all') params.set('type', type);
+    for (const [name, value] of new URLSearchParams(filterQuery)) params.set(name, value);
     const search = params.toString();
     window.history.replaceState(null, '', search ? `/search?${search}` : '/search');
-  }, [q, type]);
+  }, [q, type, filterQuery]);
 
   useEffect(() => {
     if (!active) {
@@ -100,7 +136,7 @@ export function SearchView({
     }
 
     const controller = new AbortController();
-    fetchSearch(q, type, 1, controller.signal).then(
+    fetchSearch(q, type, filters, 1, controller.signal).then(
       (result) => setState({ key, status: 'done', loadingMore: false, ...result }),
       (error: unknown) => {
         if (!controller.signal.aborted) {
@@ -109,7 +145,9 @@ export function SearchView({
       },
     );
     return () => controller.abort();
-  }, [active, key, q, type]);
+    // key already covers q, type and the filters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, key]);
 
   async function loadMore() {
     if (current?.status !== 'done') {
@@ -118,7 +156,7 @@ export function SearchView({
 
     setState({ ...current, loadingMore: true });
     try {
-      const next = await fetchSearch(q, type, current.page + 1);
+      const next = await fetchSearch(q, type, filters, current.page + 1);
       setState((previous) =>
         previous?.key === key && previous.status === 'done'
           ? {
@@ -160,7 +198,11 @@ export function SearchView({
             type="single"
             variant="outline"
             value={type}
-            onValueChange={(value) => value && setType(value as SearchFilter)}
+            onValueChange={(value) => {
+              if (!value) return;
+              setType(value as SearchFilter);
+              setFilters((current) => filtersForType(current, value as SearchFilter));
+            }}
             aria-label="Filtra per tipo"
           >
             {SEARCH_FILTERS.map((filter) => (
@@ -170,11 +212,44 @@ export function SearchView({
             ))}
           </ToggleGroup>
         </div>
+        {type !== 'person' && (
+          <>
+            <Button
+              variant={showFilters ? 'secondary' : 'outline'}
+              size="sm"
+              className="self-start"
+              onClick={() => setShowFilters((open) => !open)}
+              aria-expanded={showFilters}
+              aria-controls="search-filters"
+            >
+              <SlidersHorizontal aria-hidden />
+              Filtri
+              {activeFilters > 0 && (
+                <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground tabular-nums">
+                  {activeFilters}
+                </span>
+              )}
+            </Button>
+            {showFilters && (
+              <div id="search-filters">
+                <SearchFiltersPanel
+                  filters={filters}
+                  type={type}
+                  explore={explore}
+                  onChange={setFilters}
+                />
+              </div>
+            )}
+            <ActiveFilterChips filters={filters} onChange={setFilters} />
+          </>
+        )}
       </div>
 
       {!active ? (
         <p className="py-12 text-center text-muted-foreground">
-          Scrivi almeno {MIN_QUERY_LENGTH} caratteri per cercare tra film, serie, libri e persone.
+          {type === 'person'
+            ? `Scrivi almeno ${MIN_QUERY_LENGTH} caratteri per cercare un attore, un regista o un autore.`
+            : `Scrivi almeno ${MIN_QUERY_LENGTH} caratteri, oppure svuota la ricerca per esplorare.`}
         </p>
       ) : !current ? (
         <ResultsGrid aria-busy>
@@ -197,6 +272,17 @@ export function SearchView({
               {UNAVAILABLE_MESSAGES[group]}
             </p>
           ))}
+          {current.notes.map((note) => (
+            <p key={note} className="text-sm text-muted-foreground" role="status">
+              {NOTE_MESSAGES[note]}
+            </p>
+          ))}
+          {explore && current.results.length > 0 && (
+            <div className="flex items-baseline justify-between gap-2">
+              <h2 className="font-heading text-lg font-semibold">Esplora</h2>
+              <span className="text-sm text-muted-foreground">{SORT_LABELS[filters.sort]}</span>
+            </div>
+          )}
           {type === 'person' ? (
             current.people.length === 0 ? (
               <p className="py-12 text-center text-muted-foreground">
@@ -232,9 +318,15 @@ export function SearchView({
                 </Shelf>
               )}
               {current.results.length === 0 ? (
-                <p className="py-12 text-center text-muted-foreground">
-                  Nessun titolo trovato per “{q}”.
-                </p>
+                current.notes.includes('books_need_query') ? null : (
+                  <p className="py-12 text-center text-muted-foreground">
+                    {explore
+                      ? 'Nessun titolo con questi filtri.'
+                      : activeFilters > 0
+                        ? `Nessun titolo per “${q}” con questi filtri.`
+                        : `Nessun titolo trovato per “${q}”.`}
+                  </p>
+                )
               ) : (
                 <ResultsGrid>
                   {current.results.map((media) => (

@@ -14,6 +14,9 @@ export interface NormalizedMedia {
   overview?: string;
   genres?: string[];
   isbn13?: string;
+  /** TMDB search/discover results only: used to filter text searches, never stored. */
+  genreIds?: number[];
+  rating?: { average: number; count: number };
   // runtime, number_of_seasons, authors, page_count…: see the provider for the exact shape.
   extra: Record<string, unknown>;
 }
@@ -21,6 +24,8 @@ export interface NormalizedMedia {
 export interface SearchOptions {
   type?: MediaType;
   page?: number;
+  /** Exact year, where the provider supports it (TMDB movie/tv search). */
+  year?: number;
 }
 
 export interface SearchPage {
