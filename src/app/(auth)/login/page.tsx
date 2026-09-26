@@ -11,19 +11,10 @@ export const metadata: Metadata = {
   title: 'Accedi',
 };
 
-const ERROR_MESSAGES: Record<string, string> = {
-  link_invalid: 'Il link non è valido o è scaduto. Richiedine uno nuovo.',
-  other_browser:
-    'Apri il link nello stesso browser in cui l’hai richiesto. Richiedine uno nuovo da qui.',
-};
-
-export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
+export default async function LoginPage() {
   if (await getCurrentUser()) {
     redirect('/dashboard');
   }
-
-  const { error } = await searchParams;
-  const initialError = typeof error === 'string' ? ERROR_MESSAGES[error] : undefined;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -34,12 +25,10 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle className="text-2xl">Scaffale</CardTitle>
-            <CardDescription>
-              Accedi con la tua email: ti mandiamo un link, niente password.
-            </CardDescription>
+            <CardDescription>Accedi con la tua email e la tua password.</CardDescription>
           </CardHeader>
           <CardContent>
-            <LoginForm initialError={initialError} />
+            <LoginForm />
           </CardContent>
         </Card>
       </main>

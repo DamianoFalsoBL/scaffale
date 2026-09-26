@@ -1,32 +1,19 @@
 'use client';
 
-import { Loader2, MailCheck } from 'lucide-react';
-import { useActionState } from 'react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useActionState, useState } from 'react';
 
-import { signInWithMagicLink, type LoginState } from '@/actions/auth';
+import { signInWithPassword, type LoginState } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const initialState: LoginState = { status: 'idle' };
 
-export function LoginForm({ initialError }: { initialError?: string }) {
-  const [state, formAction, pending] = useActionState(signInWithMagicLink, initialState);
-
-  if (state.status === 'sent') {
-    return (
-      <div className="flex flex-col items-center gap-3 text-center" role="status">
-        <MailCheck className="size-10 text-muted-foreground" aria-hidden />
-        <p className="font-medium">Controlla la tua email</p>
-        <p className="text-sm text-muted-foreground">
-          Se <span className="font-medium text-foreground">{state.email}</span> è autorizzato,
-          riceverai un link per accedere. Il link scade dopo un’ora.
-        </p>
-      </div>
-    );
-  }
-
-  const error = state.status === 'error' ? state.message : initialError;
+export function LoginForm() {
+  const [state, formAction, pending] = useActionState(signInWithPassword, initialState);
+  const [showPassword, setShowPassword] = useState(false);
+  const error = state.status === 'error' ? state.message : undefined;
 
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
@@ -36,23 +23,51 @@ export function LoginForm({ initialError }: { initialError?: string }) {
           id="email"
           name="email"
           type="email"
-          autoComplete="email"
+          autoComplete="username"
           inputMode="email"
           placeholder="nome@esempio.it"
           defaultValue={state.status === 'error' ? state.email : undefined}
           aria-invalid={!!error}
-          aria-describedby={error ? 'email-error' : undefined}
           required
         />
-        {error && (
-          <p id="email-error" className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        )}
       </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="password">Password</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            className="pr-10"
+            aria-invalid={!!error}
+            aria-describedby={error ? 'login-error' : undefined}
+            required
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="absolute top-1/2 right-1 -translate-y-1/2"
+            aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+            aria-pressed={showPassword}
+            onClick={() => setShowPassword((value) => !value)}
+          >
+            {showPassword ? <EyeOff /> : <Eye />}
+          </Button>
+        </div>
+      </div>
+
+      {error && (
+        <p id="login-error" className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+
       <Button type="submit" disabled={pending}>
         {pending && <Loader2 className="animate-spin" aria-hidden />}
-        Inviami il link di accesso
+        Accedi
       </Button>
     </form>
   );

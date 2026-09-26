@@ -150,17 +150,19 @@ Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incolla
 
 ## Autenticazione
 
-- Login solo con **magic link** (`/login`). Il link porta a `/auth/confirm`, che crea la sessione e rimanda a `/dashboard`.
-- `src/proxy.ts` rinnova la sessione a ogni richiesta e manda a `/login` chi non è autenticato. Il layout `(app)` ricontrolla la sessione e applica `ALLOWED_EMAILS`.
-- Il form risponde sempre "controlla la tua email", anche per indirizzi non autorizzati, così non rivela quali account esistono.
-- **Registrazioni chiuse** su Supabase (`[auth] enable_signup = false` in `supabase/config.toml`; attenzione: `[auth.email] enable_signup` deve restare `true`, altrimenti si spegne tutto il login via email), attive dal 25/09/2026 dopo la creazione del primo account. Verifica: una chiamata diretta a `POST /auth/v1/signup` con la publishable key risponde `422 signup_disabled`.
-- Per aggiungere un altro utente: aggiungi l'email ad `ALLOWED_EMAILS`, riapri temporaneamente le registrazioni (`[auth] enable_signup = true`, diff + push), fai il primo accesso e poi richiudile.
-- Sul piano free con l'SMTP integrato di Supabase:
-  - i template email non si possono personalizzare, quindi l'email è in inglese;
-  - il link usa il flusso PKCE (`?code=`) e va aperto **nello stesso browser** in cui l'hai richiesto (per esempio non nel browser integrato di Claude se Gmail apre i link in Chrome). Se succede, la pagina di login lo spiega;
-  - l'SMTP integrato invia solo agli indirizzi dei membri dell'organizzazione Supabase, con pochi invii all'ora.
+- Login con **email e password** (`/login`, `supabase.auth.signInWithPassword`). Niente email da ricevere: dal 26/09/2026 i magic link sono stati tolti, perché con l'SMTP integrato di Supabase erano limitati a pochi invii all'ora e andavano aperti nello stesso browser.
+- La password **non è nel codice**: Supabase ne conserva solo l'hash. Per impostarla o cambiarla lancia nel terminale (dalla cartella del progetto):
 
-  Con un SMTP personalizzato (valutazione in Fase 4) si potrà usare un template con `token_hash`, già supportato da `/auth/confirm`, che funziona su qualsiasi dispositivo.
+  ```bash
+  pnpm auth:set-password
+  ```
+
+  Lo script ([scripts/set-password.mjs](scripts/set-password.mjs)) chiede la password due volte senza mostrarla (minimo 12 caratteri, come `minimum_password_length` in `supabase/config.toml`) e la imposta con la secret key sull'account di `ALLOWED_EMAILS`.
+
+- Errore unico "Email o password non corretti" per email sconosciute e password sbagliate; Supabase limita i tentativi di accesso per indirizzo IP.
+- `src/proxy.ts` rinnova la sessione a ogni richiesta e manda a `/login` chi non è autenticato. Il layout `(app)` ricontrolla la sessione e applica `ALLOWED_EMAILS`.
+- **Registrazioni chiuse** su Supabase (`[auth] enable_signup = false` in `supabase/config.toml`; attenzione: `[auth.email] enable_signup` deve restare `true`, altrimenti si spegne tutto il login con email, password compresa). Verifica: `POST /auth/v1/signup` con la publishable key risponde `422 signup_disabled`.
+- Per aggiungere un altro utente: aggiungi l'email ad `ALLOWED_EMAILS`, crea l'account dalla dashboard di Supabase (Authentication → Add user) e imposta la password con lo script.
 
 ## Libreria
 
@@ -220,18 +222,19 @@ Per provarli in locale (con `pnpm dev` avviato) basta una richiesta con l'header
 
 ## Script
 
-| Comando              | Descrizione                                                         |
-| -------------------- | ------------------------------------------------------------------- |
-| `pnpm dev`           | Server di sviluppo (Turbopack)                                      |
-| `pnpm build`         | Build di produzione                                                 |
-| `pnpm start`         | Avvia la build di produzione                                        |
-| `pnpm lint`          | ESLint (`pnpm lint:fix` per le correzioni automatiche)              |
-| `pnpm typecheck`     | Genera i tipi delle route (`next typegen`) ed esegue `tsc --noEmit` |
-| `pnpm test`          | Vitest, una esecuzione (`pnpm test:watch` in watch mode)            |
-| `pnpm format`        | Prettier in scrittura (`pnpm format:check` solo verifica)           |
-| `pnpm db:new <nome>` | Crea una nuova migrazione in `supabase/migrations`                  |
-| `pnpm db:push`       | Applica le migrazioni al progetto collegato                         |
-| `pnpm db:types`      | Genera `src/lib/supabase/database.types.ts` dal DB collegato        |
+| Comando                  | Descrizione                                                         |
+| ------------------------ | ------------------------------------------------------------------- |
+| `pnpm dev`               | Server di sviluppo (Turbopack)                                      |
+| `pnpm build`             | Build di produzione                                                 |
+| `pnpm start`             | Avvia la build di produzione                                        |
+| `pnpm lint`              | ESLint (`pnpm lint:fix` per le correzioni automatiche)              |
+| `pnpm typecheck`         | Genera i tipi delle route (`next typegen`) ed esegue `tsc --noEmit` |
+| `pnpm test`              | Vitest, una esecuzione (`pnpm test:watch` in watch mode)            |
+| `pnpm format`            | Prettier in scrittura (`pnpm format:check` solo verifica)           |
+| `pnpm db:new <nome>`     | Crea una nuova migrazione in `supabase/migrations`                  |
+| `pnpm db:push`           | Applica le migrazioni al progetto collegato                         |
+| `pnpm auth:set-password` | Imposta o cambia la password del tuo account (input nascosto)       |
+| `pnpm db:types`          | Genera `src/lib/supabase/database.types.ts` dal DB collegato        |
 
 `next build` non esegue più il lint, quindi prima di un commit lancia: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm format:check`.
 
@@ -240,12 +243,11 @@ Per provarli in locale (con `pnpm dev` avviato) basta una richiesta con l'header
 ```
 src/
   proxy.ts           # Refresh della sessione + protezione delle route
-  actions/           # Server Actions: auth (magic link, logout), library (aggiungi, modifica, rimuovi)
+  actions/           # Server Actions: auth (login con password, logout), library (aggiungi, modifica, rimuovi)
   app/
     (auth)/login/    # Pagina di login
     (app)/           # Area protetta: dashboard, library, item/[id], search
     api/search/      # Route della ricerca unificata
-    auth/confirm/    # Route di atterraggio del magic link
   components/        # Componenti dell'app (ThemeProvider, ThemeToggle…)
     ui/              # Componenti shadcn/ui (generati con `pnpm dlx shadcn@latest add …`)
   lib/

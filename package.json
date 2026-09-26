@@ -19,7 +19,8 @@
     "test:watch": "vitest",
     "db:new": "supabase migration new",
     "db:push": "supabase db push",
-    "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts"
+    "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts",
+    "auth:set-password": "node scripts/set-password.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

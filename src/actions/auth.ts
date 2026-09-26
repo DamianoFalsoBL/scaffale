@@ -1,70 +1,55 @@
 'use server';
 
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { isEmailAllowed } from '@/lib/auth/allowlist';
-import { publicEnv } from '@/lib/env';
 import { serverEnv } from '@/lib/env.server';
 import { createClient } from '@/lib/supabase/server';
 import { loginSchema } from '@/lib/validation/auth';
 
-export type LoginState =
-  | { status: 'idle' }
-  | { status: 'sent'; email: string }
-  | { status: 'error'; message: string; email?: string };
+export type LoginState = { status: 'idle' } | { status: 'error'; message: string; email?: string };
 
-export async function signInWithMagicLink(
+// One message for unknown emails and wrong passwords, so the form can't be used to probe accounts.
+const INVALID_CREDENTIALS = 'Email o password non corretti.';
+
+export async function signInWithPassword(
   _previous: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  const parsed = loginSchema.safeParse({ email: formData.get('email') });
+  const parsed = loginSchema.safeParse({
+    email: formData.get('email'),
+    password: formData.get('password'),
+  });
 
   if (!parsed.success) {
     return {
       status: 'error',
-      message: parsed.error.issues[0]?.message ?? 'Email non valida.',
+      message: parsed.error.issues[0]?.message ?? INVALID_CREDENTIALS,
+      email: typeof formData.get('email') === 'string' ? String(formData.get('email')) : undefined,
     };
   }
 
-  const { email } = parsed.data;
+  const { email, password } = parsed.data;
 
-  // Same answer for allowed and unknown emails, so the form cannot be used to probe accounts.
   if (!isEmailAllowed(email, serverEnv.ALLOWED_EMAILS)) {
-    return { status: 'sent', email };
+    return { status: 'error', message: INVALID_CREDENTIALS, email };
   }
 
-  const origin = (await headers()).get('origin') ?? publicEnv.NEXT_PUBLIC_SITE_URL;
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${origin}/auth/confirm`,
-      // Only explicitly allowlisted emails may create an account (and only while Supabase allows sign-ups).
-      shouldCreateUser: serverEnv.ALLOWED_EMAILS.length > 0,
-    },
-  });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    console.error('signInWithOtp failed', { status: error.status, code: error.code });
-
-    if (error.status === 429) {
-      return { status: 'error', message: 'Troppi tentativi. Riprova tra qualche minuto.', email };
-    }
-
-    // Unknown users with sign-ups disabled land here: keep the neutral answer.
-    if (error.code === 'otp_disabled' || error.code === 'signup_disabled') {
-      return { status: 'sent', email };
-    }
-
-    return {
-      status: 'error',
-      message: 'Non è stato possibile inviare il link. Riprova più tardi.',
-      email,
-    };
+    console.warn('signInWithPassword failed', { status: error.status, code: error.code });
+    const message =
+      error.status === 429
+        ? 'Troppi tentativi. Riprova tra qualche minuto.'
+        : error.code === 'invalid_credentials'
+          ? INVALID_CREDENTIALS
+          : 'Non è stato possibile accedere. Riprova tra poco.';
+    return { status: 'error', message, email };
   }
 
-  return { status: 'sent', email };
+  redirect('/dashboard');
 }
 
 export async function signOut() {
