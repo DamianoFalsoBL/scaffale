@@ -25,6 +25,12 @@ values ('00000000-0000-4000-c000-000000000001', '00000000-0000-4000-b000-0000000
 insert into public.season_progress (entry_id, season_number)
 values ('00000000-0000-4000-c000-000000000001', 1);
 
+insert into public.lists (id, name)
+values ('00000000-0000-4000-d000-000000000001', 'Lista di A');
+
+insert into public.list_items (list_id, entry_id)
+values ('00000000-0000-4000-d000-000000000001', '00000000-0000-4000-c000-000000000001');
+
 do $$
 begin
   if (select count(*) from public.user_entries) <> 1 then
@@ -36,6 +42,9 @@ begin
   end if;
   if (select count(*) from public.season_progress) <> 1 then
     raise exception 'FAIL: user A should see their season progress';
+  end if;
+  if (select count(*) from public.list_items) <> 1 then
+    raise exception 'FAIL: user A should see their list items';
   end if;
 end $$;
 
@@ -83,6 +92,33 @@ begin
   if affected <> 0 then
     raise exception 'FAIL: user B deleted user A season progress';
   end if;
+
+  if (select count(*) from public.lists) + (select count(*) from public.list_items) <> 0 then
+    raise exception 'FAIL: user B can read user A lists';
+  end if;
+  update public.lists set name = 'hacked';
+  get diagnostics affected = row_count;
+  if affected <> 0 then
+    raise exception 'FAIL: user B renamed user A lists';
+  end if;
+  delete from public.list_items;
+  get diagnostics affected = row_count;
+  if affected <> 0 then
+    raise exception 'FAIL: user B removed user A list items';
+  end if;
+end $$;
+
+-- B cannot put A's entry in a list of their own.
+insert into public.lists (id, name)
+values ('00000000-0000-4000-d000-00000000000b', 'Lista di B');
+
+do $$
+begin
+  insert into public.list_items (list_id, entry_id)
+  values ('00000000-0000-4000-d000-00000000000b', '00000000-0000-4000-c000-000000000001');
+  raise exception 'FAIL: user B added user A entry to a list';
+exception
+  when insufficient_privilege then null; -- RLS violation (42501)
 end $$;
 
 -- B cannot attach season progress to A's entry, even as its own row.
@@ -113,6 +149,14 @@ do $$
 begin
   perform 1 from public.media_items;
   raise exception 'FAIL: anon can read media_items';
+exception
+  when insufficient_privilege then null;
+end $$;
+
+do $$
+begin
+  perform 1 from public.lists;
+  raise exception 'FAIL: anon can read lists';
 exception
   when insufficient_privilege then null;
 end $$;

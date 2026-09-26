@@ -9,6 +9,8 @@ export interface LibraryFilters {
   type: MediaType | 'all';
   status: EntryStatus | 'all';
   q: string;
+  /** A list id; empty or missing = every entry. */
+  list?: string;
 }
 
 /** Lowercase, without accents: "Perché" matches "perche". */
@@ -44,6 +46,7 @@ export function filterEntries(entries: readonly LibraryEntry[], filters: Library
     (entry) =>
       (filters.type === 'all' || entry.item.mediaType === filters.type) &&
       (filters.status === 'all' || entry.status === filters.status) &&
+      (!filters.list || entry.listIds.includes(filters.list)) &&
       (!query || searchableText(entry).includes(query)),
   );
 }

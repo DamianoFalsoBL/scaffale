@@ -29,15 +29,19 @@ export interface LibraryEntry {
   updatedAt: string;
   /** Seasons marked as seen (TV series only), ascending. */
   watchedSeasons: number[];
+  /** Lists this entry belongs to. */
+  listIds: string[];
   item: LibraryItem;
 }
 
 /** Columns selected for library queries (entry + its catalog item + seasons seen). */
-export const LIBRARY_SELECT = '*, media_items!inner(*), season_progress(season_number)';
+export const LIBRARY_SELECT =
+  '*, media_items!inner(*), season_progress(season_number), list_items(list_id)';
 
 export type LibraryRow = Tables<'user_entries'> & {
   media_items: Tables<'media_items'>;
   season_progress?: { season_number: number }[];
+  list_items?: { list_id: string }[];
 };
 
 export function asRecord(value: Json): Record<string, unknown> {
@@ -60,6 +64,7 @@ export function toLibraryEntry(row: LibraryRow): LibraryEntry {
     watchedSeasons: (row.season_progress ?? [])
       .map((season) => season.season_number)
       .sort((a, b) => a - b),
+    listIds: (row.list_items ?? []).map((item) => item.list_id),
     item: {
       id: item.id,
       mediaType: item.media_type,

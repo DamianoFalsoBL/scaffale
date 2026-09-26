@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { addEntrySchema, libraryParamsSchema, updateEntrySchema } from './library';
+import { addEntrySchema, libraryHref, libraryParamsSchema, updateEntrySchema } from './library';
 
 const entryId = '0b9f8f64-3c2f-4a36-9d51-8a8e3b0f6c11';
 
@@ -59,13 +59,20 @@ describe('updateEntrySchema', () => {
 describe('libraryParamsSchema', () => {
   it('falls back to defaults for invalid values', () => {
     expect(
-      libraryParamsSchema.parse({ type: 'podcast', status: 'x', sort: 'y', view: 'z' }),
+      libraryParamsSchema.parse({
+        type: 'podcast',
+        status: 'x',
+        sort: 'y',
+        view: 'z',
+        list: 'not-a-uuid',
+      }),
     ).toEqual({
       type: 'all',
       status: 'all',
       sort: 'added',
       view: 'grid',
       q: '',
+      list: '',
     });
   });
 
@@ -77,6 +84,7 @@ describe('libraryParamsSchema', () => {
         sort: 'rating',
         view: 'list',
         q: 'eco',
+        list: '0f8fad5b-d9cb-469f-a165-70867728950e',
       }),
     ).toEqual({
       type: 'book',
@@ -84,6 +92,19 @@ describe('libraryParamsSchema', () => {
       sort: 'rating',
       view: 'list',
       q: 'eco',
+      list: '0f8fad5b-d9cb-469f-a165-70867728950e',
     });
+  });
+});
+
+describe('libraryHref', () => {
+  it('keeps only non-default values', () => {
+    const params = libraryParamsSchema.parse({ type: 'tv', q: 'dark' });
+
+    expect(libraryHref(params)).toBe('/library?type=tv&q=dark');
+    expect(libraryHref(params, { list: '0f8fad5b-d9cb-469f-a165-70867728950e', q: '' })).toBe(
+      '/library?type=tv&list=0f8fad5b-d9cb-469f-a165-70867728950e',
+    );
+    expect(libraryHref(libraryParamsSchema.parse({}))).toBe('/library');
   });
 });

@@ -4,10 +4,12 @@ import Link from 'next/link';
 
 import { EntryGrid, EntryList } from '@/components/library-views';
 import { Button } from '@/components/ui/button';
-import { getLibrary } from '@/lib/library/queries';
+import { summarizeLists } from '@/lib/library/lists';
+import { getLibrary, getLists } from '@/lib/library/queries';
 import { filterEntries, sortEntries } from '@/lib/library/views';
 import { libraryParamsSchema } from '@/lib/validation/library';
 
+import { LibraryLists } from './library-lists';
 import { LibraryToolbar } from './library-toolbar';
 
 export const metadata: Metadata = {
@@ -15,8 +17,12 @@ export const metadata: Metadata = {
 };
 
 export default async function LibraryPage({ searchParams }: PageProps<'/library'>) {
-  const params = libraryParamsSchema.parse(await searchParams);
-  const entries = await getLibrary();
+  const parsed = libraryParamsSchema.parse(await searchParams);
+  const [entries, lists] = await Promise.all([getLibrary(), getLists()]);
+  const summaries = summarizeLists(lists, entries);
+  const activeList = summaries.find((list) => list.id === parsed.list);
+  // A deleted or unknown list shows the whole library.
+  const params = activeList ? parsed : { ...parsed, list: '' };
 
   // Counts per tab follow the status and text filters, so they match what each tab shows.
   const counted = filterEntries(entries, { ...params, type: 'all' });
@@ -50,10 +56,21 @@ export default async function LibraryPage({ searchParams }: PageProps<'/library'
         </div>
       ) : (
         <>
+          <LibraryLists lists={summaries} params={params} />
+          {activeList && (
+            <div className="space-y-1">
+              <h2 className="text-xl font-semibold">{activeList.name}</h2>
+              {activeList.description && (
+                <p className="text-sm text-muted-foreground">{activeList.description}</p>
+              )}
+            </div>
+          )}
           <LibraryToolbar params={params} counts={counts} />
           {visible.length === 0 ? (
             <p className="py-12 text-center text-muted-foreground">
-              Nessun titolo corrisponde ai filtri.
+              {activeList && activeList.count === 0
+                ? 'Questa lista è vuota: aggiungi titoli dalla loro scheda, con “Aggiungi a lista”.'
+                : 'Nessun titolo corrisponde ai filtri.'}
             </p>
           ) : params.view === 'list' ? (
             <EntryList entries={visible} />

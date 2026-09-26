@@ -13,10 +13,11 @@ import {
 } from '@/components/title-extras';
 import { parseExtra } from '@/lib/library/extra';
 import { todayIso } from '@/lib/library/model';
-import { getEntryByMediaItem } from '@/lib/library/queries';
+import { getEntryByMediaItem, getLists } from '@/lib/library/queries';
 import { seasonList } from '@/lib/library/seasons';
 
 import { EntryForm } from './entry-form';
+import { EntryLists } from './entry-lists';
 import { RemoveEntryButton } from './remove-entry-button';
 import { SeasonTracker } from './season-tracker';
 
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: PageProps<'/item/[id]'>): Pro
 }
 
 export default async function ItemPage({ params }: PageProps<'/item/[id]'>) {
-  const entry = await loadEntry((await params).id);
+  const [entry, lists] = await Promise.all([loadEntry((await params).id), getLists()]);
   if (!entry) notFound();
 
   const { item } = entry;
@@ -83,6 +84,8 @@ export default async function ItemPage({ params }: PageProps<'/item/[id]'>) {
           }}
         />
       </section>
+
+      <EntryLists entryId={entry.id} lists={lists} memberIds={entry.listIds} />
 
       <Suspense fallback={<TitleExtrasSkeleton />}>
         <TitleExtrasSection

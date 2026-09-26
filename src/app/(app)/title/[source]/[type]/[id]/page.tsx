@@ -7,10 +7,12 @@ import { BackLink } from '@/components/back-link';
 import { TitleDetails } from '@/components/title-details';
 import { TitleExtrasSection, TitleExtrasSkeleton } from '@/components/title-extras';
 import { markLibraryEntries } from '@/lib/library/matching';
-import { getLibraryIndex } from '@/lib/library/queries';
+import { getLibraryIndex, getLists } from '@/lib/library/queries';
 import { titleParamsSchema, toTitleData } from '@/lib/library/title';
 import { getDetails } from '@/lib/providers';
 import { ProviderError } from '@/lib/providers/http';
+
+import { PreviewAddToList } from './preview-add-to-list';
 
 /** Details from the provider (cached 24h by fetch); missing titles become a 404. */
 const loadTitle = cache(async (rawParams: { source: string; type: string; id: string }) => {
@@ -41,7 +43,11 @@ export async function generateMetadata({
 export default async function TitlePreviewPage({
   params,
 }: PageProps<'/title/[source]/[type]/[id]'>) {
-  const [media, index] = await Promise.all([loadTitle(await params), getLibraryIndex()]);
+  const [media, index, lists] = await Promise.all([
+    loadTitle(await params),
+    getLibraryIndex(),
+    getLists(),
+  ]);
   if (!media) notFound();
 
   // Already in the library (same id, or same book from another source): show the real page.
@@ -58,7 +64,15 @@ export default async function TitlePreviewPage({
         actions={
           <div className="flex flex-wrap items-center gap-3">
             <AddToLibrary media={media} size="default" openOnAdd />
-            <span className="text-sm text-muted-foreground">Non è ancora nella tua libreria.</span>
+            <PreviewAddToList
+              lists={lists}
+              source={media.source}
+              externalId={media.externalId}
+              mediaType={media.mediaType}
+            />
+            <span className="basis-full text-sm text-muted-foreground">
+              Non è ancora nella tua libreria.
+            </span>
           </div>
         }
       />

@@ -30,6 +30,7 @@ function entry(
     createdAt: `2026-01-${String(seq).padStart(2, '0')}T10:00:00Z`,
     updatedAt: `2026-01-${String(seq).padStart(2, '0')}T10:00:00Z`,
     watchedSeasons: [],
+    listIds: [],
     ...rest,
     item: {
       id: `m${seq}`,
@@ -152,11 +153,13 @@ describe('row mapping', () => {
         created_at: '2026-05-01T00:00:00Z',
       },
       season_progress: [{ season_number: 2 }, { season_number: 1 }],
+      list_items: [{ list_id: 'l1' }],
     } satisfies LibraryRow;
 
     expect(toLibraryEntry(row)).toMatchObject({
       rating: 8,
       watchedSeasons: [1, 2],
+      listIds: ['l1'],
       finishedAt: '2026-05-01',
       item: { mediaType: 'book', extra: { authors: ['Umberto Eco'] } },
     });
@@ -180,6 +183,15 @@ describe('filterEntries', () => {
     expect(filterEntries(entries, { type: 'book', status: 'all', q: '' })).toHaveLength(1);
     expect(filterEntries(entries, { type: 'all', status: 'completed', q: '' })).toHaveLength(1);
     expect(filterEntries(entries, { type: 'tv', status: 'completed', q: '' })).toHaveLength(0);
+  });
+
+  it('filters by list', () => {
+    const listed = [entry({ listIds: ['l1', 'l2'] }), entry({ listIds: ['l2'] }), entry()];
+    const all = { type: 'all', status: 'all', q: '' } as const;
+
+    expect(filterEntries(listed, { ...all, list: 'l1' })).toHaveLength(1);
+    expect(filterEntries(listed, { ...all, list: 'l2' })).toHaveLength(2);
+    expect(filterEntries(listed, { ...all, list: '' })).toHaveLength(3);
   });
 
   it('searches titles and authors ignoring accents and case', () => {

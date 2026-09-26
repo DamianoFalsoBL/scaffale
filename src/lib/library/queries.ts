@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import type { NormalizedMedia } from '@/lib/providers/types';
 
+import { sortLists, type ListInfo } from './lists';
 import type { LibraryIndexRow } from './matching';
 import { LIBRARY_SELECT, toLibraryEntry, toMediaItemRow, type LibraryEntry } from './model';
 
@@ -96,4 +97,15 @@ export async function upsertMediaItem(media: NormalizedMedia): Promise<string> {
     throw new Error('Could not save the catalog item', { cause: error });
   }
   return data.id;
+}
+
+/** The signed-in user's lists (RLS), by name. Counts come from the library entries. */
+export async function getLists(): Promise<ListInfo[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('lists').select('id, name, description');
+
+  if (error) {
+    throw new Error('Could not load the lists', { cause: error });
+  }
+  return sortLists(data);
 }

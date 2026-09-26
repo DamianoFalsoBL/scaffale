@@ -1,7 +1,7 @@
 'use client';
 
 import { LayoutGrid, List, Search } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { SEARCH_FILTER_LABELS } from '@/lib/media-labels';
 import { ENTRY_STATUSES, GENERIC_STATUS_LABELS } from '@/lib/status-labels';
-import type { LibraryParams } from '@/lib/validation/library';
+import { libraryHref, type LibraryParams } from '@/lib/validation/library';
 import { cn } from '@/lib/utils';
 
 const TYPES = ['all', 'movie', 'tv', 'book'] as const;
@@ -29,8 +29,6 @@ const SORT_LABELS: Record<LibraryParams['sort'], string> = {
   year: 'Anno',
 };
 
-const DEFAULTS: LibraryParams = { type: 'all', status: 'all', sort: 'added', view: 'grid', q: '' };
-
 export function LibraryToolbar({
   params,
   counts,
@@ -39,18 +37,12 @@ export function LibraryToolbar({
   counts: Record<(typeof TYPES)[number], number>;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
   const [pending, startTransition] = useTransition();
   const [query, setQuery] = useState(params.q);
   const debouncedQuery = useDebouncedValue(query, 250).trim();
 
   function navigate(changes: Partial<LibraryParams>) {
-    const next = { ...params, ...changes };
-    const search = new URLSearchParams();
-    for (const key of Object.keys(next) as (keyof LibraryParams)[]) {
-      if (next[key] !== DEFAULTS[key]) search.set(key, next[key]);
-    }
-    const url = search.size ? `${pathname}?${search}` : pathname;
+    const url = libraryHref(params, changes);
     startTransition(() => router.replace(url, { scroll: false }));
   }
 

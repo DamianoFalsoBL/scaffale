@@ -55,9 +55,51 @@ export const libraryParamsSchema = z.object({
   sort: z.enum(LIBRARY_SORTS).catch('added'),
   view: z.enum(LIBRARY_VIEWS).catch('grid'),
   q: z.string().trim().max(100).catch(''),
+  list: z.uuid().catch(''),
 });
+
+const listName = z
+  .string()
+  .trim()
+  .min(1, 'Dai un nome alla lista.')
+  .max(60, 'Il nome può avere al massimo 60 caratteri.');
+const listDescription = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
+  z.string().trim().max(280, 'La descrizione può avere al massimo 280 caratteri.').nullable(),
+);
+
+export const createListSchema = z.object({ name: listName, description: listDescription });
+export const updateListSchema = createListSchema.extend({ listId: z.uuid() });
+export const listItemSchema = z.object({ listId: z.uuid(), entryId: z.uuid() });
+/** A title from search or preview: added to the library (as planned) if needed. */
+export const addTitleToListSchema = addEntrySchema
+  .omit({ status: true })
+  .extend({ listId: z.uuid() });
 
 export type AddEntryInput = z.infer<typeof addEntrySchema>;
 export type UpdateEntryInput = z.infer<typeof updateEntrySchema>;
 export type SeasonsInput = z.infer<typeof seasonsSchema>;
+export type CreateListInput = z.input<typeof createListSchema>;
+export type UpdateListInput = z.input<typeof updateListSchema>;
+export type ListItemInput = z.infer<typeof listItemSchema>;
+export type AddTitleToListInput = z.infer<typeof addTitleToListSchema>;
 export type LibraryParams = z.infer<typeof libraryParamsSchema>;
+
+export const LIBRARY_DEFAULTS: LibraryParams = {
+  type: 'all',
+  status: 'all',
+  sort: 'added',
+  view: 'grid',
+  q: '',
+  list: '',
+};
+
+/** /library URL with only the non-default values. */
+export function libraryHref(params: LibraryParams, changes: Partial<LibraryParams> = {}) {
+  const next = { ...params, ...changes };
+  const search = new URLSearchParams();
+  for (const key of Object.keys(LIBRARY_DEFAULTS) as (keyof LibraryParams)[]) {
+    if (next[key] !== LIBRARY_DEFAULTS[key]) search.set(key, next[key]);
+  }
+  return search.size ? `/library?${search}` : '/library';
+}
