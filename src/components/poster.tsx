@@ -30,7 +30,13 @@ export function Poster({
   const Icon = PLACEHOLDER_ICONS[mediaType];
 
   return (
-    <div className={cn('relative aspect-2/3 overflow-hidden rounded-md bg-muted', className)}>
+    <div
+      className={cn(
+        // Book-like corners, a hairline edge and a soft shadow, like a cover on a shelf.
+        'relative aspect-2/3 overflow-hidden rounded-[3px] bg-muted shadow-sm ring-1 ring-foreground/10',
+        className,
+      )}
+    >
       {src && failedSrc !== src ? (
         <Image
           src={src}
@@ -43,8 +49,8 @@ export function Poster({
           onError={() => setFailedSrc(src)}
         />
       ) : (
-        <div className="flex size-full items-center justify-center text-muted-foreground">
-          <Icon className="size-8" aria-hidden />
+        <div className="flex size-full items-center justify-center bg-secondary text-muted-foreground/70">
+          <Icon className="size-8" strokeWidth={1.5} aria-hidden />
         </div>
       )}
     </div>

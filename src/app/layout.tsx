@@ -1,5 +1,5 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
+import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
 
 import { SiteFooter } from '@/components/site-footer';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -11,6 +11,13 @@ import './globals.css';
 const geistSans = Geist({
   variable: '--font-sans',
   subsets: ['latin'],
+});
+
+// Display serif for headings ("Carta e inchiostro"); body text stays in Geist.
+const fraunces = Fraunces({
+  variable: '--font-display',
+  subsets: ['latin'],
+  axes: ['opsz'],
 });
 
 const geistMono = Geist_Mono({
@@ -29,12 +36,21 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+export const viewport: Viewport = {
+  // Lets the mobile tab bar sit above the home indicator (env(safe-area-inset-bottom)).
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f5efe3' },
+    { media: '(prefers-color-scheme: dark)', color: '#1c1714' },
+  ],
+};
+
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     // next-themes sets the theme class on <html> before hydration.
     <html
       lang="it"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">

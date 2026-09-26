@@ -44,3 +44,13 @@ export function formatAuthors(authors: readonly string[]) {
   if (names.length === 2) return `di ${names[0]} e ${names[1]}`;
   return `di ${names[0]}, ${names[1]} e altri`;
 }
+
+/** "Buongiorno" / "Buon pomeriggio" / "Buonasera" for the hour in Rome. */
+export function greeting(now = new Date(), timeZone = 'Europe/Rome') {
+  const hour = Number(
+    new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone }).format(now),
+  );
+  if (hour >= 5 && hour < 13) return 'Buongiorno';
+  if (hour >= 13 && hour < 18) return 'Buon pomeriggio';
+  return 'Buonasera';
+}

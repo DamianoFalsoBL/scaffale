@@ -171,7 +171,7 @@ Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incolla
 - **`/library`:** schede Tutti/Film/Serie/Libri con conteggi, filtro per stato, ordinamento (aggiunti di recente, titolo, voto, anno), ricerca per titolo, titolo originale e autore (senza accenti), vista griglia o lista, tutto nell'URL. Cambio di stato direttamente dalla card, con aggiornamento ottimistico.
 - **`/item/[id]`** (id della scheda in `media_items`): metadati dalla scheda salvata (durata e tagline, stagioni ed episodi, autori, pagine, editore, ISBN), stato, voto a mezze stelle (salvato 1–10, usabile anche da tastiera), date, contatore visioni/letture, note, rimozione con conferma. La scheda condivisa resta nel catalogo.
 - **`/dashboard`:** completati per tipo, "In corso", "Da vedere e da leggere", "Completati di recente", completati per anno.
-- **Colori dei tipi:** Film viola, Serie TV verde, Libri arancio: controllati con il validatore di palette (anche per daltonismo, modalità chiara e scura); l'etichetta resta sempre scritta.
+- **Veste grafica "Carta e inchiostro":** fondo carta e testo inchiostro (versione scura in marrone caldo), titoli in Fraunces, accento ocra. Tipi: Film prugna, Serie TV verde, Libri blu inchiostro, controllati con il validatore di palette insieme all'accento (anche per daltonismo, chiaro e scuro); l'etichetta resta sempre scritta. Su telefono la navigazione è una barra in basso, come un'app.
 
 ## Ricerca e fonti esterne
 

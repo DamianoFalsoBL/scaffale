@@ -140,7 +140,7 @@ export default async function ItemPage({ params }: PageProps<'/item/[id]'>) {
           {seasons.length > 0 && (
             <section className="space-y-2">
               <h2 className="font-medium">Stagioni</h2>
-              <ul className="divide-y rounded-lg border text-sm">
+              <ul className="divide-y rounded-md bg-card text-sm shadow-xs ring-1 ring-foreground/10">
                 {seasons.map((season) => (
                   <li key={season.seasonNumber} className="flex justify-between gap-4 px-3 py-2">
                     <span>{season.name}</span>
@@ -165,7 +165,7 @@ export default async function ItemPage({ params }: PageProps<'/item/[id]'>) {
         </div>
       </div>
 
-      <section className="flex flex-col gap-4 rounded-xl border p-4 sm:p-6">
+      <section className="flex flex-col gap-4 rounded-md bg-card p-4 shadow-xs ring-1 ring-foreground/10 sm:p-6">
         <h2 className="text-lg font-semibold">I miei dati</h2>
         <EntryForm
           key={entry.updatedAt}

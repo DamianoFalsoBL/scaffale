@@ -5,6 +5,7 @@ import { Poster } from '@/components/poster';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatAuthors } from '@/lib/format';
 import type { MediaType } from '@/lib/providers/types';
+import { cn } from '@/lib/utils';
 
 export interface MediaCardData {
   title: string;
@@ -40,13 +41,18 @@ export function MediaCard({
   const details = cardSubtitle(media);
   const body = (
     <>
-      <div className="relative">
+      <div
+        className={cn(
+          'relative',
+          href && 'transition-transform duration-200 motion-safe:group-hover:-translate-y-1',
+        )}
+      >
         <Poster
           src={media.posterUrl ?? undefined}
           alt=""
           mediaType={media.mediaType}
           sizes={POSTER_SIZES}
-          className={href ? 'transition-opacity group-hover:opacity-90' : undefined}
+          className={href ? 'transition-shadow duration-200 group-hover:shadow-md' : undefined}
         />
         {showType && (
           <MediaTypeBadge mediaType={media.mediaType} className="absolute top-2 left-2 shadow-sm" />
@@ -54,7 +60,7 @@ export function MediaCard({
       </div>
       <div className="min-w-0">
         <h3
-          className="line-clamp-2 min-h-[2lh] text-sm leading-snug font-medium group-hover:underline"
+          className="line-clamp-2 min-h-[2lh] font-heading text-[15px] leading-snug font-medium group-hover:underline"
           title={media.title}
         >
           {media.title}
@@ -67,7 +73,7 @@ export function MediaCard({
   );
 
   return (
-    <article className="flex h-full flex-col gap-2">
+    <article className="flex h-full flex-col gap-2 duration-300 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1">
       {href ? (
         <Link
           href={href}

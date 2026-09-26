@@ -19,7 +19,7 @@ function StarIcon({ percent, className }: { percent: number; className?: string 
     <span className={cn('relative inline-block', className)}>
       <Star className="size-full text-muted-foreground/40" aria-hidden />
       <span className="absolute inset-0 overflow-hidden" style={{ width: `${percent}%` }}>
-        <Star className="size-full fill-amber-400 text-amber-400" aria-hidden />
+        <Star className="size-full fill-star text-star" aria-hidden />
       </span>
     </span>
   );

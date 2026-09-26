@@ -33,7 +33,7 @@ export default async function LibraryPage({ searchParams }: PageProps<'/library'
       <h1 className="text-2xl font-semibold tracking-tight">Libreria</h1>
 
       {entries.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed px-6 py-16 text-center">
+        <div className="flex flex-col items-center gap-4 rounded-md border border-dashed bg-card px-6 py-16 text-center">
           <Library className="size-10 text-muted-foreground" aria-hidden />
           <div className="space-y-1">
             <p className="font-medium">La tua libreria è vuota</p>

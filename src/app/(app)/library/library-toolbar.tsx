@@ -79,7 +79,7 @@ export function LibraryToolbar({
       </Tabs>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-48 flex-1">
+        <div className="relative basis-full sm:min-w-48 sm:flex-1 sm:basis-auto">
           <Search
             className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
@@ -98,7 +98,10 @@ export function LibraryToolbar({
           value={params.status}
           onValueChange={(status) => navigate({ status: status as LibraryParams['status'] })}
         >
-          <SelectTrigger className="w-44" aria-label="Filtra per stato">
+          <SelectTrigger
+            className="min-w-0 flex-1 sm:w-44 sm:flex-none"
+            aria-label="Filtra per stato"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -115,7 +118,7 @@ export function LibraryToolbar({
           value={params.sort}
           onValueChange={(sort) => navigate({ sort: sort as LibraryParams['sort'] })}
         >
-          <SelectTrigger className="w-48" aria-label="Ordina per">
+          <SelectTrigger className="min-w-0 flex-1 sm:w-48 sm:flex-none" aria-label="Ordina per">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -49,7 +49,7 @@ export function EntryGrid({ entries }: { entries: LibraryEntry[] }) {
 
 export function EntryList({ entries }: { entries: LibraryEntry[] }) {
   return (
-    <ul className="divide-y rounded-lg border">
+    <ul className="divide-y rounded-md bg-card shadow-xs ring-1 ring-foreground/10">
       {entries.map((entry) => {
         const meta = [
           MEDIA_TYPE_LABELS[entry.item.mediaType],

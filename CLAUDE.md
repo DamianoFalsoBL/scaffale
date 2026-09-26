@@ -29,4 +29,5 @@ Full spec: [docs/spec.md](docs/spec.md). Decisions that override the spec are li
 - Vitest resolves `@/` via Vite 8's native `resolve.tsconfigPaths`.
 - Catalog writes (`media_items`) only through `upsertMediaItem` (`src/lib/library/queries.ts`, secret key); user data through the user's client so RLS applies. Metadata on add is always re-fetched server-side.
 - Library filtering/sorting/stats are pure functions in `src/lib/library/views.ts` over the whole library (fine for a personal library; move to SQL if it grows past a few thousand entries).
-- Media type colors: violet (movie) / green (tv) / orange (book), validated with the dataviz palette validator; keep labels visible.
+- Visual style "Carta e inchiostro": paper/ink palette in `globals.css` (light + warm-brown dark), Fraunces for headings (`font-heading`, h1/h2 by default), Geist for body. Media type colors are theme tokens `--movie` (plum), `--tv` (green), `--book` (ink blue) with per-theme label colors, validated together with the ochre accent (`--primary`) using the dataviz palette validator; keep labels visible.
+- Navigation: sticky header (desktop links) + fixed bottom tab bar on phones (`src/components/app-nav.tsx`); body gets bottom padding via `body:has([data-mobile-tabbar])`.

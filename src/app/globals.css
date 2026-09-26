@@ -9,7 +9,14 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
+  --color-movie: var(--movie);
+  --color-movie-foreground: var(--movie-foreground);
+  --color-tv: var(--tv);
+  --color-tv-foreground: var(--tv-foreground);
+  --color-book: var(--book);
+  --color-book-foreground: var(--book-foreground);
+  --color-star: var(--star);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,73 +55,94 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * "Carta e inchiostro": warm paper, ink text, burnt-ochre accent.
+ * Text pairs are ≥ 4.5:1; media type colors were checked with the dataviz palette
+ * validator (all pairs, incl. the accent) on both surfaces, each with the label color
+ * that keeps its contrast.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #f5efe3;
+  --foreground: #2b2520;
+  --card: #fbf8f1;
+  --card-foreground: #2b2520;
+  --popover: #fbf8f1;
+  --popover-foreground: #2b2520;
+  --primary: #b45309;
+  --primary-foreground: #ffffff;
+  --secondary: #ebe3d4;
+  --secondary-foreground: #2b2520;
+  --muted: #ebe3d4;
+  --muted-foreground: #6f6457;
+  --accent: #ebe3d4;
+  --accent-foreground: #2b2520;
+  --destructive: #b42318;
+  --border: #dccfba;
+  --input: #d3c5ad;
+  --ring: #b45309;
+  --movie: #86198f;
+  --movie-foreground: #ffffff;
+  --tv: #047857;
+  --tv-foreground: #ffffff;
+  --book: #1d4ed8;
+  --book-foreground: #ffffff;
+  --star: #c2780c;
+  --chart-1: #b45309;
+  --chart-2: #86198f;
+  --chart-3: #047857;
+  --chart-4: #1d4ed8;
+  --chart-5: #6f6457;
+  --radius: 0.5rem;
+  --sidebar: #fbf8f1;
+  --sidebar-foreground: #2b2520;
+  --sidebar-primary: #b45309;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ebe3d4;
+  --sidebar-accent-foreground: #2b2520;
+  --sidebar-border: #dccfba;
+  --sidebar-ring: #b45309;
 }
 
+/* "Notte": warm brown night version of the same paper. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #1c1714;
+  --foreground: #efe6d8;
+  --card: #241e1a;
+  --card-foreground: #efe6d8;
+  --popover: #241e1a;
+  --popover-foreground: #efe6d8;
+  --primary: #d97706;
+  --primary-foreground: #1c1714;
+  --secondary: #2f2722;
+  --secondary-foreground: #efe6d8;
+  --muted: #2f2722;
+  --muted-foreground: #b5a795;
+  --accent: #2f2722;
+  --accent-foreground: #efe6d8;
+  --destructive: #f97066;
+  --border: #3b312a;
+  --input: #4a3e35;
+  --ring: #d97706;
+  --movie: #a21caf;
+  --movie-foreground: #ffffff;
+  --tv: #059669;
+  --tv-foreground: #1c1714;
+  --book: #2563eb;
+  --book-foreground: #ffffff;
+  --star: #e8a24a;
+  --chart-1: #d97706;
+  --chart-2: #a21caf;
+  --chart-3: #059669;
+  --chart-4: #2563eb;
+  --chart-5: #b5a795;
+  --sidebar: #241e1a;
+  --sidebar-foreground: #efe6d8;
+  --sidebar-primary: #d97706;
+  --sidebar-primary-foreground: #1c1714;
+  --sidebar-accent: #2f2722;
+  --sidebar-accent-foreground: #efe6d8;
+  --sidebar-border: #3b312a;
+  --sidebar-ring: #d97706;
 }
 
 @layer base {
@@ -126,5 +154,16 @@
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2 {
+    @apply font-heading tracking-tight;
+  }
+}
+
+/* Keep the page (and footer) clear of the fixed mobile tab bar. */
+@media (width < 40rem) {
+  body:has([data-mobile-tabbar]) {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
   }
 }

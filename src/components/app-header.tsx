@@ -2,27 +2,27 @@ import { LogOut } from 'lucide-react';
 import Link from 'next/link';
 
 import { signOut } from '@/actions/auth';
-import { NavLink } from '@/components/nav-link';
+import { DesktopNav } from '@/components/app-nav';
+import { Logo } from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 
 export function AppHeader({ email }: { email: string }) {
   return (
-    <header className="border-b">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <nav className="flex items-center gap-4 sm:gap-6">
-          <Link href="/dashboard" className="text-lg font-semibold tracking-tight">
-            Scaffale
+    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
+      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="flex items-center gap-6">
+          <Link
+            href="/dashboard"
+            className="rounded-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            aria-label="Scaffale, vai alla home"
+          >
+            <Logo />
           </Link>
-          {/* On phones the brand already links to the dashboard. */}
-          <NavLink href="/dashboard" className="hidden sm:inline">
-            Dashboard
-          </NavLink>
-          <NavLink href="/library">Libreria</NavLink>
-          <NavLink href="/search">Cerca</NavLink>
-        </nav>
-        <div className="flex items-center gap-2">
-          <span className="hidden max-w-48 truncate text-sm text-muted-foreground sm:inline">
+          <DesktopNav />
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="mr-2 hidden max-w-56 truncate text-sm text-muted-foreground lg:inline">
             {email}
           </span>
           <ThemeToggle />
