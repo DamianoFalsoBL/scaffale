@@ -3,7 +3,9 @@
 import { House, LibraryBig, Search } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSyncExternalStore } from 'react';
 
+import { lastSearchHref } from '@/lib/search-memory';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -11,6 +13,17 @@ const NAV_ITEMS = [
   { href: '/library', label: 'Libreria', icon: LibraryBig },
   { href: '/search', label: 'Cerca', icon: Search },
 ] as const;
+
+const noSubscribe = () => () => {};
+
+/** Section links; "Cerca" reopens the last search, like a tab in a native app. */
+function useNavItems() {
+  const searchHref = useSyncExternalStore(noSubscribe, lastSearchHref, () => '/search');
+  return NAV_ITEMS.map((item) => ({
+    ...item,
+    link: item.href === '/search' ? searchHref : item.href,
+  }));
+}
 
 function useIsActive() {
   const pathname = usePathname();
@@ -21,15 +34,16 @@ function useIsActive() {
 
 export function DesktopNav() {
   const isActive = useIsActive();
+  const items = useNavItems();
 
   return (
     <nav className="hidden items-center gap-1 sm:flex" aria-label="Sezioni">
-      {NAV_ITEMS.map(({ href, label }) => {
+      {items.map(({ href, link, label }) => {
         const active = isActive(href);
         return (
           <Link
             key={href}
-            href={href}
+            href={link}
             aria-current={active ? 'page' : undefined}
             className={cn(
               'relative rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-accent hover:text-foreground',
@@ -49,6 +63,7 @@ export function DesktopNav() {
 /** Bottom tab bar on phones, like an installed app. */
 export function MobileTabBar() {
   const isActive = useIsActive();
+  const items = useNavItems();
 
   return (
     <nav
@@ -57,12 +72,12 @@ export function MobileTabBar() {
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
     >
       <ul className="grid grid-cols-3">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {items.map(({ href, link, label, icon: Icon }) => {
           const active = isActive(href);
           return (
             <li key={href}>
               <Link
-                href={href}
+                href={link}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
                   'flex h-16 flex-col items-center justify-center gap-1 text-xs transition-colors',

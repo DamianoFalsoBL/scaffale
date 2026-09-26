@@ -1,10 +1,9 @@
-import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cache, Suspense } from 'react';
 import { z } from 'zod';
 
+import { BackLink } from '@/components/back-link';
 import { TitleDetails } from '@/components/title-details';
 import {
   TitleExtrasSection,
@@ -34,13 +33,8 @@ export default async function ItemPage({ params }: PageProps<'/item/[id]'>) {
 
   return (
     <div className="flex flex-col gap-8">
-      <Link
-        href="/library"
-        className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Libreria
-      </Link>
+      {/* Back to wherever the title was opened from (library, search, dashboard…). */}
+      <BackLink fallback="/library" label="Indietro" />
 
       <TitleDetails item={item} />
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertCircle, Loader2, Search, SlidersHorizontal } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import type { SearchResponse } from '@/app/api/search/route';
@@ -20,9 +21,11 @@ import {
   countActiveFilters,
   filtersForType,
   filtersToEntries,
+  searchFiltersSchema,
   SORT_LABELS,
   type SearchFilters,
 } from '@/lib/search-filters';
+import { rememberSearch } from '@/lib/search-memory';
 import { MIN_QUERY_LENGTH, SEARCH_FILTERS } from '@/lib/validation/search';
 
 import { ActiveFilterChips, SearchFiltersPanel } from './search-filters-panel';
@@ -43,9 +46,14 @@ const UNAVAILABLE_MESSAGES: Record<SearchResponse['unavailable'][number], string
   books: 'I libri non sono disponibili al momento.',
 };
 
-type SearchState =
-  | ({ key: string; status: 'done'; loadingMore: boolean } & SearchResponse)
-  | { key: string; status: 'error'; message: string };
+type DoneState = { key: string; status: 'done'; loadingMore: boolean } & SearchResponse;
+type SearchState = DoneState | { key: string; status: 'error'; message: string };
+
+/**
+ * The last results, kept across client navigations so coming back from a detail page
+ * shows them at once (with every page loaded). Browser only: never written on the server.
+ */
+let lastResults: DoneState | undefined;
 
 class SearchRequestError extends Error {
   constructor(readonly status: number) {
@@ -79,6 +87,35 @@ async function fetchSearch(
   return (await response.json()) as SearchResponse;
 }
 
+/** Pages 1…upTo merged, like pressing "Carica altri" (the server may skip pages when filtering). */
+async function fetchPages(
+  q: string,
+  type: SearchFilter,
+  filters: SearchFilters,
+  upTo: number,
+  signal: AbortSignal,
+) {
+  let result = await fetchSearch(q, type, filters, 1, signal);
+  while (result.hasMore && result.page < upTo) {
+    const next = await fetchSearch(q, type, filters, result.page + 1, signal);
+    result = {
+      ...next,
+      results: appendUnique(result.results, next.results),
+      people: appendPeople(result.people, next.people),
+    };
+  }
+  return result;
+}
+
+/** Query, type and filters from the URL (kept current with replaceState, restored by "back"). */
+function readSearchParams(params: URLSearchParams) {
+  return {
+    query: params.get('q') ?? '',
+    type: SEARCH_FILTERS.find((filter) => filter === params.get('type')) ?? 'all',
+    filters: searchFiltersSchema.parse(Object.fromEntries(params)),
+  };
+}
+
 const mediaKey = (media: SearchResultWithLibrary) => `${media.source}:${media.externalId}`;
 
 function appendUnique(current: SearchResultWithLibrary[], next: SearchResultWithLibrary[]) {
@@ -95,20 +132,18 @@ function personDetail(person: PersonSummary) {
   return [person.department, person.knownFor[0]].filter(Boolean).join(' · ') || undefined;
 }
 
-export function SearchView({
-  initialQuery,
-  initialType,
-  initialFilters,
-}: {
-  initialQuery: string;
-  initialType: SearchFilter;
-  initialFilters: SearchFilters;
-}) {
-  const [query, setQuery] = useState(initialQuery);
-  const [type, setType] = useState<SearchFilter>(initialType);
-  const [filters, setFilters] = useState(initialFilters);
-  const [showFilters, setShowFilters] = useState(countActiveFilters(initialFilters) > 0);
-  const [state, setState] = useState<SearchState>();
+export function SearchView() {
+  // Read on the client, not passed from the server: after "back" the page is restored with
+  // its first render, while the URL already holds the search the user made.
+  const searchParams = useSearchParams();
+  const [initial] = useState(() => readSearchParams(searchParams));
+  const [query, setQuery] = useState(initial.query);
+  const [type, setType] = useState<SearchFilter>(initial.type);
+  const [filters, setFilters] = useState(initial.filters);
+  const [showFilters, setShowFilters] = useState(countActiveFilters(initial.filters) > 0);
+  const [state, setState] = useState<SearchState | undefined>(() =>
+    typeof window === 'undefined' ? undefined : lastResults,
+  );
 
   const q = useDebouncedValue(query, DEBOUNCE_MS).trim();
   // Empty query = Esplora (popular titles, narrowed by the filters).
@@ -128,7 +163,12 @@ export function SearchView({
     for (const [name, value] of new URLSearchParams(filterQuery)) params.set(name, value);
     const search = params.toString();
     window.history.replaceState(null, '', search ? `/search?${search}` : '/search');
+    rememberSearch(search);
   }, [q, type, filterQuery]);
+
+  useEffect(() => {
+    if (state?.status === 'done' && !state.loadingMore) lastResults = state;
+  }, [state]);
 
   useEffect(() => {
     if (!active) {
@@ -136,7 +176,10 @@ export function SearchView({
     }
 
     const controller = new AbortController();
-    fetchSearch(q, type, filters, 1, controller.signal).then(
+    // Coming back to remembered results: refresh them quietly (library marks may have
+    // changed), up to the last page that was loaded.
+    const pages = lastResults?.key === key ? lastResults.page : 1;
+    fetchPages(q, type, filters, pages, controller.signal).then(
       (result) => setState({ key, status: 'done', loadingMore: false, ...result }),
       (error: unknown) => {
         if (!controller.signal.aborted) {
