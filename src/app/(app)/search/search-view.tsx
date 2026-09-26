@@ -1,6 +1,7 @@
 'use client';
 
-import { AlertCircle, Loader2, Search } from 'lucide-react';
+import { AlertCircle, Info, Loader2, Search } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import type { SearchResponse } from '@/app/api/search/route';
@@ -12,6 +13,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { SEARCH_FILTER_LABELS } from '@/lib/media-labels';
 import type { SearchResultWithLibrary } from '@/lib/library/matching';
+import { titleHref } from '@/lib/library/title';
 import type { SearchFilter } from '@/lib/providers/search';
 import { SEARCH_FILTERS } from '@/lib/validation/search';
 
@@ -51,6 +53,11 @@ async function fetchSearch(q: string, type: SearchFilter, page: number, signal?:
 }
 
 const mediaKey = (media: SearchResultWithLibrary) => `${media.source}:${media.externalId}`;
+
+/** Library titles open their page; the others open the preview. */
+function detailsHref(media: SearchResultWithLibrary) {
+  return media.library ? `/item/${media.library.mediaItemId}` : titleHref(media);
+}
 
 function authorsOf(media: SearchResultWithLibrary) {
   return Array.isArray(media.extra.authors) ? (media.extra.authors as string[]) : [];
@@ -193,9 +200,23 @@ export function SearchView({
                 <MediaCard
                   key={mediaKey(media)}
                   media={{ ...media, authors: authorsOf(media) }}
-                  href={media.library ? `/item/${media.library.mediaItemId}` : undefined}
+                  href={detailsHref(media)}
                 >
-                  <AddToLibrary media={media} />
+                  {/* Side by side on desktop; stacked full-width on phones, where cards are narrow. */}
+                  <div className="flex w-full flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-1">
+                    <AddToLibrary media={media} className="px-2 max-sm:w-full" />
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="px-2 text-muted-foreground max-sm:w-full"
+                    >
+                      <Link href={detailsHref(media)}>
+                        <Info aria-hidden />
+                        Dettagli
+                      </Link>
+                    </Button>
+                  </div>
                 </MediaCard>
               ))}
             </ResultsGrid>
