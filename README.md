@@ -2,7 +2,7 @@
 
 Tracker personale di film, serie TV e libri. Uso personale, non commerciale.
 
-Stato: **Fase 3** (libreria, dettaglio, dashboard). MVP completo in locale; deploy in Fase 4. Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
+Stato: **Fase 4** in corso (cron, attribuzione, deploy su `scaffale.damianofalso.com`). Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
 
 ## Stack
 
@@ -113,7 +113,7 @@ Note sulle versioni:
 | `SUPABASE_SECRET_KEY`                  | solo server   | 3       | `sb_secret_…`, bypassa la RLS: mai nel client |
 | `TMDB_READ_ACCESS_TOKEN`               | solo server   | 2       | Read Access Token v4                          |
 | `GOOGLE_BOOKS_API_KEY`                 | solo server   | 2       |                                               |
-| `CRON_SECRET`                          | solo server   | 4       | Almeno 16 caratteri                           |
+| `CRON_SECRET`                          | solo server   | 4       | Almeno 16 caratteri; obbligatoria online      |
 | `ALLOWED_EMAILS`                       | solo server   | 1       | Facoltativa, separate da virgola              |
 | `NEXT_PUBLIC_SITE_URL`                 | client+server | 0       | Default `http://localhost:3000`               |
 | `DNS_IPV4_FIRST`                       | solo server   | —       | Facoltativa, solo sviluppo locale: vedi sotto |
@@ -191,6 +191,24 @@ Tutte le chiamate alle API esterne partono **solo dal server** (`src/lib/provide
 
 Su alcune reti le connessioni **IPv6** verso CloudFront (la CDN di TMDB) vengono resettate durante l'handshake TLS: `curl -6` fallisce, `curl -4` funziona. Node prova prima IPv6 e non ripiega da solo. In quel caso metti `DNS_IPV4_FIRST=true` in `.env.local`: `src/instrumentation.ts` fa preferire IPv4 al server. Su Vercel non serve.
 
+## Job pianificati (Vercel Cron)
+
+Definiti in [vercel.json](vercel.json). Sul piano Hobby girano al massimo una volta al giorno, con una tolleranza di un'ora sull'orario. Entrambe le route rispondono 401 senza `Authorization: Bearer <CRON_SECRET>`; Vercel manda l'header da solo.
+
+| Route                 | Quando (UTC) | Cosa fa                                                                                                                                                                                        |
+| --------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/cron/keepalive` | 03:00        | Query leggera su `media_items`: il piano free di Supabase mette in pausa i progetti dopo 7 giorni senza richieste                                                                              |
+| `/api/cron/refresh`   | 04:00        | Riscarica fino a 25 schede sincronizzate più di 150 giorni fa (TMDB vieta dati più vecchi di 6 mesi), una alla volta con pause di 250 ms; gli errori finiscono nei log e non bloccano il resto |
+
+Per provarli in locale (con `pnpm dev` avviato) basta una richiesta con l'header giusto, per esempio da Node, leggendo `CRON_SECRET` da `.env.local`.
+
+## Sicurezza
+
+- Solo l'account in `ALLOWED_EMAILS` può entrare: registrazioni chiuse su Supabase, allowlist al login e su ogni pagina, RLS sui dati.
+- **Online l'app si rifiuta di partire** se mancano `ALLOWED_EMAILS`, `SUPABASE_SECRET_KEY` o `CRON_SECRET` (`assertDeployedServerEnv`, attivo quando è impostato `VERCEL`).
+- Pagine pubbliche: solo `/login`, `/auth/*` e `/info`, che non contiene dati.
+- Header di sicurezza su tutte le risposte (`X-Frame-Options: DENY`, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`) e `noindex` (meta tag e `X-Robots-Tag`).
+
 ## Script
 
 | Comando              | Descrizione                                                         |
@@ -238,4 +256,4 @@ tests/fixtures/      # Risposte reali (ridotte) di TMDB, Google Books e Open Lib
 
 ## Attribuzioni
 
-Questo prodotto usa le API di TMDB. L'attribuzione richiesta dai termini (logo TMDB e "This product uses the TMDB API but is not endorsed or certified by TMDB") verrà aggiunta nel footer e in una pagina `/info` nella Fase 4, prima del deploy.
+Questo prodotto usa le API di TMDB. Come chiedono i termini, il **logo ufficiale TMDB** (`public/brand/tmdb-logo.svg`, non modificato e più piccolo del nome dell'app) e la frase "This product uses the TMDB API but is not endorsed or certified by TMDB" compaiono nel footer di ogni pagina e nella pagina pubblica [`/info`](src/app/info/page.tsx), che cita anche Google Books e Open Library.

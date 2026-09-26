@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 
+import { SiteFooter } from '@/components/site-footer';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { publicEnv } from '@/lib/env';
@@ -24,6 +25,8 @@ export const metadata: Metadata = {
     template: '%s · Scaffale',
   },
   description: 'Il mio tracker personale di film, serie TV e libri.',
+  // Personal app: keep it out of search engines.
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
@@ -42,6 +45,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           disableTransitionOnChange
         >
           {children}
+          <SiteFooter />
           <Toaster position="bottom-center" richColors closeButton />
         </ThemeProvider>
       </body>

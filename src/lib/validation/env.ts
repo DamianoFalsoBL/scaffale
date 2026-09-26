@@ -32,3 +32,20 @@ export const serverEnvSchema = z.object({
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
+
+/**
+ * Online (on Vercel) the app fails closed: without an allowlist anyone with a Supabase
+ * account could sign in, and without these secrets cron and catalog writes break.
+ */
+export function assertDeployedServerEnv(env: ServerEnv) {
+  const missing = [
+    env.ALLOWED_EMAILS.length === 0 && 'ALLOWED_EMAILS',
+    !env.SUPABASE_SECRET_KEY && 'SUPABASE_SECRET_KEY',
+    !env.CRON_SECRET && 'CRON_SECRET',
+  ].filter(Boolean);
+
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+  return env;
+}

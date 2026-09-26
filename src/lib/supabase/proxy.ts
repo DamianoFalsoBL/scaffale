@@ -5,7 +5,7 @@ import { publicEnv } from '@/lib/env';
 import type { Database } from '@/lib/supabase/database.types';
 
 // API routes are not redirected: each one answers 401 itself (or checks CRON_SECRET).
-const PUBLIC_PATHS = ['/login', '/auth', '/api'];
+const PUBLIC_PATHS = ['/login', '/auth', '/api', '/info'];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));

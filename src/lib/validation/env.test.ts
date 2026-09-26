@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { publicEnvSchema, serverEnvSchema } from './env';
+import { assertDeployedServerEnv, publicEnvSchema, serverEnvSchema } from './env';
 
 const validPublicEnv = {
   NEXT_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co',
@@ -60,5 +60,26 @@ describe('serverEnvSchema', () => {
   it('rejects invalid emails and short cron secrets', () => {
     expect(serverEnvSchema.safeParse({ ALLOWED_EMAILS: 'not-an-email' }).success).toBe(false);
     expect(serverEnvSchema.safeParse({ CRON_SECRET: 'short' }).success).toBe(false);
+  });
+});
+
+describe('assertDeployedServerEnv', () => {
+  const complete = serverEnvSchema.parse({
+    ALLOWED_EMAILS: 'me@example.com',
+    SUPABASE_SECRET_KEY: 'sb_secret_x',
+    CRON_SECRET: '0123456789abcdef',
+  });
+
+  it('accepts a complete configuration', () => {
+    expect(assertDeployedServerEnv(complete)).toBe(complete);
+  });
+
+  it('refuses to run online without an allowlist or secrets', () => {
+    expect(() => assertDeployedServerEnv({ ...complete, ALLOWED_EMAILS: [] })).toThrow(
+      'ALLOWED_EMAILS',
+    );
+    expect(() => assertDeployedServerEnv(serverEnvSchema.parse({}))).toThrow(
+      'ALLOWED_EMAILS, SUPABASE_SECRET_KEY, CRON_SECRET',
+    );
   });
 });
