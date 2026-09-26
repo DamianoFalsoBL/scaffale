@@ -7,7 +7,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { addToLibrary } from '@/actions/library';
-import { StatusBadge, StatusDot } from '@/components/status-badge';
+import { StatusDot } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -40,15 +40,18 @@ export function AddToLibrary({
   const [optimistic, setOptimistic] = useState<EntryStatus>();
   const [pending, startTransition] = useTransition();
 
+  // Once saved, the status takes the button's place with the same size and border.
   if (saved) {
     return (
-      <Link
-        href={`/item/${saved.mediaItemId}`}
-        className="self-start rounded-full focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-        aria-label={`${media.title}: ${statusLabel(media.mediaType, saved.status)}. Apri il dettaglio`}
-      >
-        <StatusBadge mediaType={media.mediaType} status={saved.status} />
-      </Link>
+      <Button asChild variant="outline" size={size} className={cn('self-start', className)}>
+        <Link
+          href={`/item/${saved.mediaItemId}`}
+          aria-label={`${media.title}: ${statusLabel(media.mediaType, saved.status)}. Apri il dettaglio`}
+        >
+          <StatusDot status={saved.status} className="size-2.5" />
+          {statusLabel(media.mediaType, saved.status)}
+        </Link>
+      </Button>
     );
   }
 
@@ -77,11 +80,16 @@ export function AddToLibrary({
 
   if (pending && optimistic) {
     return (
-      <span className="inline-flex items-center gap-1.5 self-start text-xs text-muted-foreground">
-        <Loader2 className="size-3 animate-spin" aria-hidden />
-        <StatusDot status={optimistic} />
+      <Button
+        variant="outline"
+        size={size}
+        className={cn('self-start', className)}
+        disabled
+        aria-busy
+      >
+        <Loader2 className="animate-spin" aria-hidden />
         {statusLabel(media.mediaType, optimistic)}
-      </span>
+      </Button>
     );
   }
 
