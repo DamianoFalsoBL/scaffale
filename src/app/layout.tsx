@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
 
+import { ServiceWorker } from '@/components/service-worker';
 import { SiteFooter } from '@/components/site-footer';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
@@ -34,6 +35,9 @@ export const metadata: Metadata = {
   description: 'Il mio tracker personale di film, serie TV e libri.',
   // Personal app: keep it out of search engines.
   robots: { index: false, follow: false },
+  applicationName: 'Scaffale',
+  // Home-screen app on iPhone (the manifest covers Android and desktop).
+  appleWebApp: { title: 'Scaffale', statusBarStyle: 'default' },
 };
 
 export const viewport: Viewport = {
@@ -63,6 +67,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           {children}
           <SiteFooter />
           <Toaster position="bottom-center" richColors closeButton />
+          <ServiceWorker />
         </ThemeProvider>
       </body>
     </html>

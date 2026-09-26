@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <title>Sei offline · Scaffale</title>
+    <!-- Self-contained on purpose: offline, nothing else can be loaded. -->
+    <style>
+      :root {
+        color-scheme: light dark;
+        --background: #f5efe3;
+        --foreground: #2b2520;
+        --muted: #6f6457;
+        --primary: #b45309;
+        --primary-foreground: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: #1c1714;
+          --foreground: #efe6d8;
+          --muted: #b5a795;
+          --primary: #d97706;
+          --primary-foreground: #1c1714;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: var(--background);
+        color: var(--foreground);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        text-align: center;
+      }
+      main {
+        max-width: 22rem;
+      }
+      svg {
+        width: 72px;
+        height: 72px;
+      }
+      h1 {
+        margin: 20px 0 8px;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 1.75rem;
+        font-weight: 600;
+      }
+      p {
+        margin: 0 0 24px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      button {
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 20px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font: inherit;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      button:focus-visible {
+        outline: 3px solid var(--foreground);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <g fill="currentColor">
+          <rect x="5" y="9" width="4" height="15" rx="0.75" />
+          <rect x="16" y="8" width="4" height="16" rx="0.75" />
+          <rect
+            x="21.2"
+            y="7.4"
+            width="4"
+            height="16"
+            rx="0.75"
+            transform="rotate(14 23.2 24)"
+            opacity="0.55"
+          />
+          <rect x="3" y="24.5" width="26" height="2" rx="1" />
+        </g>
+        <rect x="10" y="5" width="5" height="19" rx="0.75" fill="var(--primary)" />
+      </svg>
+      <h1>Sei offline</h1>
+      <p>Scaffale ha bisogno della connessione. Appena torna, la pagina si ricarica da sola.</p>
+      <button type="button" id="retry">Riprova</button>
+    </main>
+    <script>
+      document.getElementById('retry').addEventListener('click', () => location.reload());
+      window.addEventListener('online', () => location.reload());
+    </script>
+  </body>
+</html>

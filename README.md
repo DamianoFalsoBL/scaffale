@@ -2,7 +2,7 @@
 
 Tracker personale di film, serie TV e libri. Uso personale, non commerciale.
 
-Stato: **Fase 4 completata**: online su https://scaffale.damianofalso.com. Fatti anche veste grafica, scheda dettagli, ricerca per persona e filtri/Esplora. Prossimo passo: PWA. Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
+Stato: **Fase 4 completata**: online su https://scaffale.damianofalso.com. Fatti anche veste grafica, scheda dettagli, ricerca per persona, filtri/Esplora e webapp installabile con accesso tramite passkey. Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
 
 ## Stack
 
@@ -163,6 +163,24 @@ Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incolla
 - `src/proxy.ts` rinnova la sessione a ogni richiesta e manda a `/login` chi non è autenticato. Il layout `(app)` ricontrolla la sessione e applica `ALLOWED_EMAILS`.
 - **Registrazioni chiuse** su Supabase (`[auth] enable_signup = false` in `supabase/config.toml`; attenzione: `[auth.email] enable_signup` deve restare `true`, altrimenti si spegne tutto il login con email, password compresa). Verifica: `POST /auth/v1/signup` con la publishable key risponde `422 signup_disabled`.
 - Per aggiungere un altro utente: aggiungi l'email ad `ALLOWED_EMAILS`, crea l'account dalla dashboard di Supabase (Authentication → Add user) e imposta la password con lo script.
+
+### Passkey
+
+- **Accesso con Face ID, impronta o PIN** del dispositivo: pulsante "Entra con passkey" in `/login` (`supabase.auth.signInWithPasskey()`, nel browser perché WebAuthn non gira sul server). Dopo l'accesso la Server Action `finishPasskeySignIn` ricontrolla `ALLOWED_EMAILS` e, se l'email non è ammessa, chiude la sessione. La password resta valida come riserva.
+- **Gestione** in `/profile` (link dal nome nell'header; icona sul telefono): elenco delle passkey (nome del gestore, data di aggiunta e ultimo accesso), "Aggiungi passkey su questo dispositivo" (`registerPasskey()`) ed eliminazione con conferma.
+- **Solo su `scaffale.damianofalso.com`:** le passkey sono legate al relying party `rp_id` (`[auth.webauthn]` in `supabase/config.toml`, stesso valore di `PASSKEY_RP_ID` in `src/lib/auth/passkeys.ts`). Su localhost e sulle anteprime Vercel il pulsante non compare. **Cambiare `rp_id` invalida tutte le passkey registrate.**
+- Funzione sperimentale di Supabase (`@supabase/supabase-js` ≥ 2.105; dalla 2.117 non serve più il flag `experimental.passkey`).
+- **Attivazione sul progetto:** `supabase config diff` (CLI 2.117 e 2.118) non confronta `[auth.passkey]`/`[auth.webauthn]`, e `config push` senza terminale interattivo applica tutto senza chiedere. Le passkey vanno quindi attivate dalla Dashboard: Authentication → Passkeys → Enable Passkey authentication, con Display Name `Scaffale`, Relying Party ID `scaffale.damianofalso.com` e Origins `https://scaffale.damianofalso.com`. Verifica: `POST /auth/v1/passkeys/authentication/options` con la publishable key risponde `200` (con `passkey_disabled` sono ancora spente).
+
+## Webapp installabile (PWA)
+
+- **Manifest** in `src/app/manifest.ts` (servito come `/manifest.webmanifest`): nome Scaffale, `display: standalone`, avvio su `/dashboard`, colori carta, scorciatoie Cerca e Libreria. Icone PNG in `public/icons/` (192, 512 e 512 maskable) e `src/app/apple-icon.png` (180, per iPhone), ricavate dal logo di `src/app/icon.svg`. Su iPhone `appleWebApp` nei metadata del layout dà titolo e barra di stato.
+- **Service worker** `public/sw.js`, registrato solo in produzione (`src/components/service-worker.tsx`): mette in cache soltanto `public/offline.html` e la mostra quando una navigazione fallisce senza rete. Pagine e dati arrivano sempre dalla rete, quindi niente contenuti vecchi; navigation preload attivo. Header dedicati in `next.config.ts`: `sw.js` senza cache e con CSP `default-src 'self'`.
+- **Pagina offline** autonoma (CSS e logo inline, tema chiaro/scuro dal sistema), con "Riprova" e ricarica automatica quando torna la rete.
+- Manifest, `sw.js` e `offline.html` sono pubblici nel proxy (`src/lib/auth/public-paths.ts`), perché il telefono li scarica anche senza sessione.
+- **Installazione:** iPhone/iPad: Safari → Condividi → "Aggiungi alla schermata Home". Android: Chrome → menu ⋮ → "Installa app". Computer: icona di installazione nella barra degli indirizzi di Chrome/Edge. Le stesse istruzioni sono in `/profile`.
+- Su iPhone l'app installata non condivide i cookie con Safari: la prima volta si entra di nuovo (con la passkey basta Face ID).
+- Per provare il service worker in locale: `pnpm build`, poi `pnpm start --port 3001` (configurazione `next-prod` in `.claude/launch.json`).
 
 ## Libreria
 

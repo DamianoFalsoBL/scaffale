@@ -21,7 +21,19 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      // Later entries override earlier ones for the same key.
+      {
+        source: '/sw.js',
+        headers: [
+          // Always check for a new worker; never serve a stale one from the HTTP cache.
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+      { source: '/offline.html', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
+    ];
   },
 };
 

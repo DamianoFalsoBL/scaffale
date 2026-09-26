@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react';
+import { LogOut, UserRound } from 'lucide-react';
 import Link from 'next/link';
 
 import { signOut } from '@/actions/auth';
@@ -22,12 +22,18 @@ export function AppHeader({ name, email }: { name: string; email: string }) {
           <DesktopNav />
         </div>
         <div className="flex items-center gap-1">
-          <span
-            className="mr-2 hidden max-w-40 truncate text-sm text-muted-foreground sm:inline"
-            title={email}
+          <Link
+            href="/profile"
+            className="mr-2 hidden max-w-40 truncate rounded-md text-sm text-muted-foreground hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:inline"
+            title={`Profilo · ${email}`}
           >
             {name}
-          </span>
+          </Link>
+          <Button asChild variant="ghost" size="icon" className="sm:hidden">
+            <Link href="/profile" aria-label="Profilo" title="Profilo">
+              <UserRound />
+            </Link>
+          </Button>
           <ThemeToggle />
           <form action={signOut}>
             <Button type="submit" variant="ghost" size="icon" aria-label="Esci" title="Esci">

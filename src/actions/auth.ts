@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 
 import { isEmailAllowed } from '@/lib/auth/allowlist';
+import { getCurrentUser } from '@/lib/auth/session';
 import { serverEnv } from '@/lib/env.server';
 import { createClient } from '@/lib/supabase/server';
 import { loginSchema } from '@/lib/validation/auth';
@@ -49,6 +50,19 @@ export async function signInWithPassword(
     return { status: 'error', message, email };
   }
 
+  redirect('/dashboard');
+}
+
+/**
+ * Called after a passkey sign-in in the browser (WebAuthn can't run on the server):
+ * the session cookie is already set, so only ALLOWED_EMAILS is left to enforce.
+ */
+export async function finishPasskeySignIn(): Promise<{ error: string }> {
+  if (!(await getCurrentUser())) {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    return { error: 'Questo account non può accedere a Scaffale.' };
+  }
   redirect('/dashboard');
 }
 

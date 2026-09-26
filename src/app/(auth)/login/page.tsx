@@ -7,6 +7,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { getCurrentUser } from '@/lib/auth/session';
 
 import { LoginForm } from './login-form';
+import { PasskeySignIn } from './passkey-sign-in';
 
 export const metadata: Metadata = {
   title: 'Accedi',
@@ -45,7 +46,10 @@ export default async function LoginPage() {
               Accedi con la tua email e la tua password.
             </p>
           </div>
-          <LoginForm />
+          <div className="flex flex-col gap-4">
+            <LoginForm />
+            <PasskeySignIn />
+          </div>
         </div>
       </main>
     </div>
