@@ -12,4 +12,5 @@ export const SEARCH_FILTER_LABELS: Record<(typeof SEARCH_FILTERS)[number], strin
   movie: 'Film',
   tv: 'Serie',
   book: 'Libri',
+  person: 'Persone',
 };

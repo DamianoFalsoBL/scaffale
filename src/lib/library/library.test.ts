@@ -184,6 +184,20 @@ describe('filterEntries', () => {
     expect(filterEntries(entries, { type: 'all', status: 'all', q: 'HERBERT' })).toHaveLength(1);
     expect(normalizeText(' Città ')).toBe('citta');
   });
+
+  it('finds titles by director or cast', () => {
+    const withPeople = [
+      entry({
+        item: { title: 'Dune', extra: { directors: ['Denis Villeneuve'], cast: ['Zendaya'] } },
+      }),
+      entry({ item: { title: 'Altro' } }),
+    ];
+
+    expect(filterEntries(withPeople, { type: 'all', status: 'all', q: 'villeneuve' })).toHaveLength(
+      1,
+    );
+    expect(filterEntries(withPeople, { type: 'all', status: 'all', q: 'zendaya' })).toHaveLength(1);
+  });
 });
 
 describe('sortEntries', () => {

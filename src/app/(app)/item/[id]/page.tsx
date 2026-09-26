@@ -2,10 +2,11 @@ import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { cache } from 'react';
+import { cache, Suspense } from 'react';
 import { z } from 'zod';
 
 import { TitleDetails } from '@/components/title-details';
+import { TitleExtrasSection, TitleExtrasSkeleton } from '@/components/title-extras';
 import { getEntryByMediaItem } from '@/lib/library/queries';
 
 import { EntryForm } from './entry-form';
@@ -54,6 +55,14 @@ export default async function ItemPage({ params }: PageProps<'/item/[id]'>) {
           }}
         />
       </section>
+
+      <Suspense fallback={<TitleExtrasSkeleton />}>
+        <TitleExtrasSection
+          source={item.source}
+          externalId={item.externalId}
+          mediaType={item.mediaType}
+        />
+      </Suspense>
 
       <div>
         <RemoveEntryButton entryId={entry.id} title={item.title} />

@@ -20,9 +20,21 @@ export function normalizeText(text: string) {
     .trim();
 }
 
+const stringList = (value: unknown) =>
+  Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
+
+/** Title, original title and people: book authors, directors/creators, main cast. */
 function searchableText(entry: LibraryEntry) {
-  const authors = Array.isArray(entry.item.extra.authors) ? entry.item.extra.authors : [];
-  return normalizeText([entry.item.title, entry.item.originalTitle ?? '', ...authors].join(' '));
+  const { extra } = entry.item;
+  return normalizeText(
+    [
+      entry.item.title,
+      entry.item.originalTitle ?? '',
+      ...stringList(extra.authors),
+      ...stringList(extra.directors),
+      ...stringList(extra.cast),
+    ].join(' '),
+  );
 }
 
 export function filterEntries(entries: readonly LibraryEntry[], filters: LibraryFilters) {

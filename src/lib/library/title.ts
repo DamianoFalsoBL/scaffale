@@ -45,3 +45,12 @@ export const titleParamsSchema = z
   .refine(({ source, id }) => source !== 'open_library' || /^OL\d+W$/.test(id), {
     message: 'Open Library ids are works',
   });
+
+/** Library titles open their page; the others open the preview. */
+export function detailsHref(
+  media: Pick<NormalizedMedia, 'source' | 'mediaType' | 'externalId'> & {
+    library?: { mediaItemId: string };
+  },
+) {
+  return media.library ? `/item/${media.library.mediaItemId}` : titleHref(media);
+}

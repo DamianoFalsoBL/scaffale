@@ -1,0 +1,508 @@
+{
+  "adult": false,
+  "backdrop_path": "/zRKQW58MBEY078AxkHxEJzUskCl.jpg",
+  "belongs_to_collection": {
+    "id": 726871,
+    "name": "Dune - Collezione",
+    "poster_path": "/50PU47rb43uHaaE9aK4prLDTgD8.jpg",
+    "backdrop_path": "/fahk0Fu7VUUfK6IkTt1R3waOD9F.jpg"
+  },
+  "budget": 165000000,
+  "genres": [
+    {
+      "id": 878,
+      "name": "Fantascienza"
+    },
+    {
+      "id": 12,
+      "name": "Avventura"
+    }
+  ],
+  "homepage": "",
+  "id": 438631,
+  "imdb_id": "tt1160419",
+  "origin_country": ["US"],
+  "original_language": "en",
+  "original_title": "Dune",
+  "overview": "Paul Atreides, un brillante e dotato giovane nato per un grande destino oltre la sua comprensione, deve viaggiare sul pianeta più pericoloso dell'universo per garantire il futuro della sua famiglia e del suo popolo. Mentre forze malevole esplodono in conflitti per la riserva esclusiva del pianeta della risorsa più preziosa esistente, \"la spezia\", una merce capace di sbloccare il massimo potenziale dell'umanità, soltanto chi riesce a superare la propria paura sopravvivrà.",
+  "popularity": 45.1465,
+  "poster_path": "/zolKD2yscZd86GviNa6pBPc6N9o.jpg",
+  "production_companies": [
+    {
+      "id": 923,
+      "logo_path": "/5UQsZrfbfG2dYJbx8DxfoTr2Bvu.png",
+      "name": "Legendary Pictures",
+      "origin_country": "US"
+    }
+  ],
+  "production_countries": [
+    {
+      "iso_3166_1": "US",
+      "name": "United States of America"
+    }
+  ],
+  "release_date": "2021-09-15",
+  "revenue": 410668500,
+  "runtime": 155,
+  "softcore": false,
+  "spoken_languages": [
+    {
+      "english_name": "English",
+      "iso_639_1": "en",
+      "name": "English"
+    }
+  ],
+  "status": "Released",
+  "tagline": "L'inizio di un viaggio straordinario",
+  "title": "Dune",
+  "video": false,
+  "vote_average": 7.785,
+  "vote_count": 15592,
+  "translations": {
+    "translations": [
+      {
+        "iso_3166_1": "US",
+        "iso_639_1": "en",
+        "name": "English",
+        "english_name": "English",
+        "data": {
+          "homepage": "https://www.warnerbros.com/movies/dune",
+          "overview": "Paul Atreides, a brilliant and gifted young man born into a great destiny beyond his understanding, must travel to the most dangerous planet in the universe to ensure the future of his family and his people. As malevolent forces explode into conflict over the planet's exclusive supply of the most precious resource in existence - a commodity capable of unlocking humanity's greatest potential - only those who can conquer their fear will survive.",
+          "runtime": 155,
+          "tagline": "It begins.",
+          "title": ""
+        }
+      },
+      {
+        "iso_3166_1": "IT",
+        "iso_639_1": "it",
+        "name": "Italiano",
+        "english_name": "Italian",
+        "data": {
+          "homepage": "",
+          "overview": "Paul Atreides, un brillante e dotato giovane nato per un grande destino oltre la sua comprensione, deve viaggiare sul pianeta più pericoloso dell'universo per garantire il futuro della sua famiglia e del suo popolo. Mentre forze malevole esplodono in conflitti per la riserva esclusiva del pianeta della risorsa più preziosa esistente, \"la spezia\", una merce capace di sbloccare il massimo potenziale dell'umanità, soltanto chi riesce a superare la propria paura sopravvivrà.",
+          "runtime": 155,
+          "tagline": "L'inizio di un viaggio straordinario",
+          "title": ""
+        }
+      }
+    ]
+  },
+  "credits": {
+    "cast": [
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 1190668,
+        "known_for_department": "Acting",
+        "name": "Timothée Chalamet",
+        "original_name": "Timothée Chalamet",
+        "popularity": 7.3986,
+        "profile_path": "/dFxpwRpmzpVfP1zjluH68DeQhyj.jpg",
+        "cast_id": 13,
+        "character": "Paul Atreides",
+        "credit_id": "5b4d01bac3a36823d803cd45",
+        "order": 0
+      },
+      {
+        "adult": false,
+        "gender": 1,
+        "id": 933238,
+        "known_for_department": "Acting",
+        "name": "Rebecca Ferguson",
+        "original_name": "Rebecca Ferguson",
+        "popularity": 9.5275,
+        "profile_path": "/ra53cM1aNmdH0aFhj8yBqPOj2fb.jpg",
+        "cast_id": 14,
+        "character": "Lady Jessica Atreides",
+        "credit_id": "5b90742fc3a368222e002f41",
+        "order": 1
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 25072,
+        "known_for_department": "Acting",
+        "name": "Oscar Isaac",
+        "original_name": "Oscar Isaac",
+        "popularity": 5.7977,
+        "profile_path": "/dW5U5yrIIPmMjRThR9KT2xH6nTz.jpg",
+        "cast_id": 53,
+        "character": "Duke Leto Atreides",
+        "credit_id": "5c50bc070e0a2612cccedcb3",
+        "order": 2
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 117642,
+        "known_for_department": "Acting",
+        "name": "Jason Momoa",
+        "original_name": "Jason Momoa",
+        "popularity": 8.1585,
+        "profile_path": "/3troAR6QbSb6nUFMDu61YCCWLKa.jpg",
+        "cast_id": 75,
+        "character": "Duncan Idaho",
+        "credit_id": "5c6610319251412fc6017577",
+        "order": 3
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 1640,
+        "known_for_department": "Acting",
+        "name": "Stellan Skarsgård",
+        "original_name": "Stellan Skarsgård",
+        "popularity": 3.9772,
+        "profile_path": "/mW7xmtGV4y79kQGn0zkKVGDMAmw.jpg",
+        "cast_id": 31,
+        "character": "Baron Vladimir Harkonnen",
+        "credit_id": "5c364b61c3a368273c1c5fee",
+        "order": 4
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 196179,
+        "known_for_department": "Acting",
+        "name": "Stephen McKinley Henderson",
+        "original_name": "Stephen McKinley Henderson",
+        "popularity": 2.2773,
+        "profile_path": "/z2weSPo4sdMNj47tP5o0me41r2z.jpg",
+        "cast_id": 209,
+        "character": "Thufir Hawat",
+        "credit_id": "61468a6985c0a20043d24c95",
+        "order": 5
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 16851,
+        "known_for_department": "Acting",
+        "name": "Josh Brolin",
+        "original_name": "Josh Brolin",
+        "popularity": 7.0262,
+        "profile_path": "/sX2etBbIkxRaCsATyw5ZpOVMPTD.jpg",
+        "cast_id": 73,
+        "character": "Gurney Halleck",
+        "credit_id": "5c64750d9251412fb4feec3e",
+        "order": 6
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 3810,
+        "known_for_department": "Acting",
+        "name": "Javier Bardem",
+        "original_name": "Javier Bardem",
+        "popularity": 5.7948,
+        "profile_path": "/zfRID0jx8DKBluPGU9xtk9sZWUt.jpg",
+        "cast_id": 55,
+        "character": "Stilgar",
+        "credit_id": "5c55434c0e0a26567ac66f76",
+        "order": 7
+      },
+      {
+        "adult": false,
+        "gender": 1,
+        "id": 195666,
+        "known_for_department": "Acting",
+        "name": "Sharon Duncan-Brewster",
+        "original_name": "Sharon Duncan-Brewster",
+        "popularity": 1.8016,
+        "profile_path": "/gp5h6rOrqBrIGgID4AMd58O6Ow6.jpg",
+        "cast_id": 160,
+        "character": "Dr. Liet Kynes",
+        "credit_id": "5e37991c4ca676001252ea99",
+        "order": 8
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 1622,
+        "known_for_department": "Acting",
+        "name": "Chang Chen",
+        "original_name": "張震",
+        "popularity": 1.8054,
+        "profile_path": "/4BOQ5pJXdsArkMHvyVhrV8Ditnr.jpg",
+        "cast_id": 103,
+        "character": "Dr. Wellington Yueh",
+        "credit_id": "5c8e6e129251410ff4a1c158",
+        "order": 9
+      }
+    ],
+    "crew": [
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 137427,
+        "known_for_department": "Directing",
+        "name": "Denis Villeneuve",
+        "original_name": "Denis Villeneuve",
+        "popularity": 3.9763,
+        "profile_path": "/zdDx9Xs93UIrJFWYApYR28J8M6b.jpg",
+        "credit_id": "58920db99251412dd10093b4",
+        "department": "Directing",
+        "job": "Director"
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 12506,
+        "known_for_department": "Writing",
+        "name": "Frank Herbert",
+        "original_name": "Frank Herbert",
+        "popularity": 1.2218,
+        "profile_path": "/1uE09gzcwXMjCfXZfXXwNDIHaXG.jpg",
+        "credit_id": "58a0e7109251412b6a003c3e",
+        "department": "Writing",
+        "job": "Novel"
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 27,
+        "known_for_department": "Writing",
+        "name": "Eric Roth",
+        "original_name": "Eric Roth",
+        "popularity": 1.6113,
+        "profile_path": "/p61cF5pqC6cH6CgXQUuBpW6P2qa.jpg",
+        "credit_id": "5c6dad950e0a267f9d9a1f7d",
+        "department": "Writing",
+        "job": "Screenplay"
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 137427,
+        "known_for_department": "Directing",
+        "name": "Denis Villeneuve",
+        "original_name": "Denis Villeneuve",
+        "popularity": 3.9763,
+        "profile_path": "/zdDx9Xs93UIrJFWYApYR28J8M6b.jpg",
+        "credit_id": "5c6dada90e0a266dacad0df3",
+        "department": "Writing",
+        "job": "Screenplay"
+      },
+      {
+        "adult": false,
+        "gender": 2,
+        "id": 564940,
+        "known_for_department": "Writing",
+        "name": "Jon Spaihts",
+        "original_name": "Jon Spaihts",
+        "popularity": 1.1868,
+        "profile_path": "/n5JF0cYCWe8AUqb4Sto042rnG4e.jpg",
+        "credit_id": "5c6dadd992514129d5051200",
+        "department": "Writing",
+        "job": "Screenplay"
+      }
+    ]
+  },
+  "watch/providers": {
+    "results": {
+      "IT": {
+        "link": "https://www.themoviedb.org/movie/438631-dune/watch?locale=IT",
+        "rent": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 5
+          },
+          {
+            "logo_path": "/aZRENwYILujqs0RVOZutTh0BVGV.png",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/872dfVu1biZISJ8rO143CZZutPR.png",
+            "provider_id": 35,
+            "provider_name": "Rakuten TV",
+            "display_priority": 11
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 34
+          },
+          {
+            "logo_path": "/xfDy4aGaOqbUqKPVQobjoJ9ZsSs.png",
+            "provider_id": 40,
+            "provider_name": "CHILI",
+            "display_priority": 37
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 5
+          },
+          {
+            "logo_path": "/aZRENwYILujqs0RVOZutTh0BVGV.png",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/872dfVu1biZISJ8rO143CZZutPR.png",
+            "provider_id": 35,
+            "provider_name": "Rakuten TV",
+            "display_priority": 11
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 34
+          },
+          {
+            "logo_path": "/xfDy4aGaOqbUqKPVQobjoJ9ZsSs.png",
+            "provider_id": 40,
+            "provider_name": "CHILI",
+            "display_priority": 37
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/iGb7XGcCiCZyBgBqIdSEBiOxNc4.png",
+            "provider_id": 109,
+            "provider_name": "Timvision",
+            "display_priority": 9
+          },
+          {
+            "logo_path": "/64fLWeSyZ1KQZhIdvTdy4QHeWty.png",
+            "provider_id": 1825,
+            "provider_name": "HBO Max Amazon Channel",
+            "display_priority": 85
+          },
+          {
+            "logo_path": "/skypuy7SXuugIQeYg0IglmzoKaS.png",
+            "provider_id": 1899,
+            "provider_name": "HBO Max",
+            "display_priority": 86
+          }
+        ]
+      }
+    }
+  },
+  "recommendations": {
+    "page": 1,
+    "results": [
+      {
+        "adult": false,
+        "backdrop_path": "/eZ239CUp1d6OryZEBPnO2n87gMG.jpg",
+        "id": 693134,
+        "title": "Dune - Parte due",
+        "original_title": "Dune: Part Two",
+        "overview": "Paul Atreides si unisce a Chani e ai Fremen mentre è sul sentiero di guerra per vendicarsi dei cospiratori che hanno annientato la sua famiglia. Di fronte a una scelta tra l'amore della sua vita e il destino dell'universo conosciuto, Paul si sforza di prevenire un terribile futuro che solo lui può prevedere.",
+        "poster_path": "/nhdQxDCI64rMgypYZpsF7UvbdJA.jpg",
+        "media_type": "movie",
+        "original_language": "en",
+        "genre_ids": [878, 12],
+        "popularity": 54.9596,
+        "release_date": "2024-02-27",
+        "softcore": false,
+        "video": false,
+        "vote_average": 8.137,
+        "vote_count": 8614
+      },
+      {
+        "adult": false,
+        "backdrop_path": "/qCPLtXrTB10UsgAFxsWOB44gDPu.jpg",
+        "id": 412656,
+        "title": "Chaos Walking",
+        "original_title": "Chaos Walking",
+        "overview": "In un futuro distopico, Todd è stato portato a credere che la Spackle abbia diffuso un virus in grado di sterminare tutte le donne e di rendere udibili i pensieri del resto dell'umanità. Dopo aver scoperto una zona di silenzio, Todd viene invitato dai genitori adottivi a scappare portando con sé solo la mappa del Nuovo Mondo, un messaggio e molte domande senza risposte. Presto scopre che la fonte del silenzio è una ragazza di nome Viola. Loro compito sarà quello di avvisare una navicella di coloni in arrivo di come il sindaco Prentiss stia preparando un esercito per un'imminente guerra.",
+        "poster_path": "/4Yk1YdSv8oAWSzbIEiolN1CijmT.jpg",
+        "media_type": "movie",
+        "original_language": "en",
+        "genre_ids": [14, 878, 12],
+        "popularity": 11.8731,
+        "release_date": "2021-02-24",
+        "softcore": false,
+        "video": false,
+        "vote_average": 6.545,
+        "vote_count": 2699
+      },
+      {
+        "adult": false,
+        "backdrop_path": "/5rYnygKCkmqWuMv1O5yAnzGF8gV.jpg",
+        "id": 339964,
+        "title": "Valerian e la città dei mille pianeti",
+        "original_title": "Valerian and the City of a Thousand Planets",
+        "overview": "Nell’anno 2740, Valerian e Laureline sono Corpi Speciali incaricati dal governo di mantenere l’ordine in tutto l’universo. Seguendo gli ordini del loro comandante, Valerian e Laureline si imbarcano per una missione nella città intergalattica di Alpha, metropoli in continua espansione e dimora di migliaia di specie diverse provenienti da ogni angolo della Galassia.  Questa importante e storica città, è sotto l’attacco di un nemico sconosciuto.  Valerian e Laureline dovranno combattere contro il tempo per trovare l’origine di questa forza maligna e fermarla prima che distrugga il nostro universo.",
+        "poster_path": "/o6Ahw1VwfPVxsLtYKjw81gQ5rRa.jpg",
+        "media_type": "movie",
+        "original_language": "en",
+        "genre_ids": [12, 878, 28],
+        "popularity": 13.1688,
+        "release_date": "2017-07-19",
+        "softcore": false,
+        "video": false,
+        "vote_average": 6.656,
+        "vote_count": 8227
+      },
+      {
+        "adult": false,
+        "backdrop_path": "/rm2oMykm5nX6SzXFr7TGHkO6r8Z.jpg",
+        "id": 428078,
+        "title": "Macchine mortali",
+        "original_title": "Mortal Engines",
+        "overview": "Migliaia di anni dopo la distruzione del mondo civilizzato a causa di un cataclisma, la razza umana si è adattata e si è evoluta con un nuovo stile di vita. Gigantesche città in movimento vagano per la Terra, prendendo brutalmente di mira le più piccole città tradizioniste. Tom Natsworthy, proveniente da una classe inferiore della grande città trazionista di Londra, si ritrova a dover combattere per la sopravvivenza dopo essersi imbattuto in Hester Shaw , una pericolosa fuggitiva. I due opposti, i cui sentieri non avrebbero mai dovuto incontrarsi, sigleranno un'alleanza destinata a cambiare il corso del futuro.",
+        "poster_path": "/yX19mO9iZuWPxVv1iBd27PKIg43.jpg",
+        "media_type": "movie",
+        "original_language": "en",
+        "genre_ids": [12, 878],
+        "popularity": 18.2681,
+        "release_date": "2018-11-27",
+        "softcore": false,
+        "video": false,
+        "vote_average": 6.253,
+        "vote_count": 5342
+      },
+      {
+        "adult": false,
+        "backdrop_path": "/bk1TitfD4YIGrM6AvljonMCtfnl.jpg",
+        "id": 695721,
+        "title": "Hunger Games - La ballata dell'usignolo e del serpente",
+        "original_title": "The Hunger Games: The Ballad of Songbirds & Snakes",
+        "overview": "Molto prima delle avventure di Hunger Games, Coriolanus Snow è un giovane ragazzo deciso a riabilitare il nome della sua famiglia caduta in disgrazia. La decima edizione degli Hunger Games si avvicina, e Snow è nominato mentore di Lucy Grey Baird, la ragazza tributo del miserabile Distretto 12.",
+        "poster_path": "/bk2Bh5mD3uvyKDaXKTAOGfoCTq5.jpg",
+        "media_type": "movie",
+        "original_language": "en",
+        "genre_ids": [878, 28],
+        "popularity": 23.3681,
+        "release_date": "2023-11-15",
+        "softcore": false,
+        "video": false,
+        "vote_average": 6.952,
+        "vote_count": 3689
+      },
+      {
+        "adult": false,
+        "backdrop_path": "/5vDuLrjJXFS9PTF7Q1xzobmYKR9.jpg",
+        "id": 1895,
+        "title": "Star Wars: Episodio III - La vendetta dei Sith",
+        "original_title": "Star Wars: Episode III - Revenge of the Sith",
+        "overview": "Tre anni dopo l'inizio della Guerra dei Cloni il lungo ed estenuante conflitto sta per giungere ad una conclusione. Obi-Wan Kenobi e Anakin Skywalker stanno per avere rivelazioni sconvolgenti. Il pianeta Coruscant è sotto attacco e per mano del Generale Grievous, il loro compito è di assicurare il Generale alla giustizia, ma il Cancelliere Palpatine sta trasformando la Repubblica in un regime tirannico, nonostante l'opposizione dell'Ordine degli Jedi e di pochi senatori ancora non corrotti. Anakin, divenuto sempre più vicino al Cancelliere, nel frattempo soffre di moleste visioni a proposito della Senatrice Padme Amidala, sposata in segreto. Sin dall'inizio della Guerra dei Cloni si è andato avvicinando sempre più al Lato Oscuro della Forza, incoraggiato da Palpatine, e presto lo scontro diverrà inevitabile. Obi-Wan Kenobi non avrà altra scelta che confrontarsi col suo antico apprendista in una battaglia mentre si affaccia un nuovo conflitto che determinerà il destino della Galassia.",
+        "poster_path": "/jM5jU9JzxnyE8CXqiOpc2ZPIbEd.jpg",
+        "media_type": "movie",
+        "original_language": "en",
+        "genre_ids": [12, 28, 878],
+        "popularity": 16.7269,
+        "release_date": "2005-05-17",
+        "softcore": false,
+        "video": false,
+        "vote_average": 7.475,
+        "vote_count": 15329
+      }
+    ],
+    "total_pages": 27,
+    "total_results": 529
+  }
+}

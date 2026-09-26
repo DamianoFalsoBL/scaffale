@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const SEARCH_FILTERS = ['all', 'movie', 'tv', 'book'] as const;
+export const SEARCH_FILTERS = ['all', 'movie', 'tv', 'book', 'person'] as const;
 
 export const searchQuerySchema = z.object({
   q: z.string().trim().min(2).max(100),

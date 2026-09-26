@@ -13,13 +13,19 @@ export interface MediaCardData {
   posterUrl?: string | null;
   year?: number | null;
   authors?: string[];
+  /** Extra detail after year/authors, e.g. a role in someone's filmography. */
+  note?: string;
 }
 
 export const POSTER_SIZES = '(min-width: 1024px) 180px, (min-width: 640px) 25vw, 45vw';
 
 /** Year, plus "di Autore" for books. */
-export function cardSubtitle({ year, authors = [] }: Pick<MediaCardData, 'year' | 'authors'>) {
-  return [year, formatAuthors(authors)].filter(Boolean).join(' · ');
+export function cardSubtitle({
+  year,
+  authors = [],
+  note,
+}: Pick<MediaCardData, 'year' | 'authors' | 'note'>) {
+  return [year, formatAuthors(authors), note].filter(Boolean).join(' · ');
 }
 
 /**

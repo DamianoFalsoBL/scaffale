@@ -1,4 +1,5 @@
 import { ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 
 import { MediaTypeBadge } from '@/components/media-type-badge';
 import { Poster } from '@/components/poster';
@@ -82,7 +83,20 @@ export function TitleDetails({ item, actions }: { item: TitleData; actions?: Rea
             <p className="text-sm text-muted-foreground">Titolo originale: {item.originalTitle}</p>
           )}
           {parsed.mediaType === 'book' && parsed.extra.authors.length > 0 && (
-            <p className="font-medium">{parsed.extra.authors.map(formatAuthorName).join(', ')}</p>
+            <p className="font-medium">
+              {parsed.extra.authors.map(formatAuthorName).map((author, i) => (
+                <span key={author}>
+                  {i > 0 && ', '}
+                  <Link
+                    href={`/search?${new URLSearchParams({ q: author, type: 'book' })}`}
+                    className="underline-offset-4 hover:underline"
+                    title={`Altri libri di ${author}`}
+                  >
+                    {author}
+                  </Link>
+                </span>
+              ))}
+            </p>
           )}
           {facts.length > 0 && <p className="text-sm text-muted-foreground">{facts.join(' · ')}</p>}
         </div>

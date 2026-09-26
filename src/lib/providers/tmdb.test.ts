@@ -132,14 +132,14 @@ describe('TMDB details', () => {
     });
   });
 
-  it('requests details with translations appended and rejects invalid ids', async () => {
+  it('requests details with translations and credits appended and rejects invalid ids', async () => {
     const fetchImpl = fakeTmdb({ '/tv/90228': tvDetails });
     const provider = createTmdbProvider({ accessToken: 'token', fetchImpl });
 
     await provider.getDetails('90228', 'tv');
     const url = new URL(fetchImpl.mock.calls[0]![0]);
 
-    expect(url.searchParams.get('append_to_response')).toBe('translations');
+    expect(url.searchParams.get('append_to_response')).toBe('translations,aggregate_credits');
     await expect(provider.getDetails('../configuration', 'movie')).rejects.toThrow(
       'Invalid TMDB id',
     );

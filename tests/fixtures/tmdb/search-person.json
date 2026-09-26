@@ -1,0 +1,163 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "adult": false,
+      "gender": 2,
+      "id": 137427,
+      "known_for_department": "Directing",
+      "name": "Denis Villeneuve",
+      "original_name": "Denis Villeneuve",
+      "popularity": 3.9763,
+      "profile_path": "/zdDx9Xs93UIrJFWYApYR28J8M6b.jpg",
+      "known_for": [
+        {
+          "adult": false,
+          "backdrop_path": "/8MUZz7oPXQftFTslZpRP3CVMOoq.jpg",
+          "id": 329865,
+          "title": "Arrival",
+          "original_title": "Arrival",
+          "overview": "Quando un misterioso oggetto proveniente dallo spazio atterra sul nostro pianeta, per le susseguenti investigazioni viene formata una squadra di élite, capitanata dall’esperta linguista Louise Banks. Mentre l’umanità vacilla sull’orlo di una Guerra globale, Banks e il suo gruppo affronta una corsa contro il tempo in cerca di risposte – e per trovarle, farà una scelta che metterà a repentaglio la sua vita e, forse, anche quella del resto della razza umana.",
+          "poster_path": "/ssAmTJia73UR2tHeTJDXgCH6FG1.jpg",
+          "media_type": "movie",
+          "original_language": "en",
+          "genre_ids": [18, 878, 9648],
+          "popularity": 32.8008,
+          "release_date": "2016-11-10",
+          "softcore": false,
+          "video": false,
+          "vote_average": 7.634,
+          "vote_count": 19914
+        },
+        {
+          "adult": false,
+          "backdrop_path": "/gNdLJU9TxrpGx4dkZidjys3fyy0.jpg",
+          "id": 335984,
+          "title": "Blade Runner 2049",
+          "original_title": "Blade Runner 2049",
+          "overview": "Trent'anni dopo gli eventi del primo film, un nuovo blade runner, l'Agente K della Polizia di Los Angeles  scopre un segreto sepolto da tempo che ha il potenziale di far precipitare nel caos quello che è rimasto della società. La scoperta di K lo spinge verso la ricerca di Rick Deckard, un ex-blade runner della polizia di Los Angeles sparito nel nulla da 30 anni.",
+          "poster_path": "/4XJQG11Ytl8mKfgbl2jkoY5ZuFX.jpg",
+          "media_type": "movie",
+          "original_language": "en",
+          "genre_ids": [878, 18],
+          "popularity": 77.6294,
+          "release_date": "2017-10-04",
+          "softcore": false,
+          "video": false,
+          "vote_average": 7.607,
+          "vote_count": 15724
+        }
+      ]
+    },
+    {
+      "adult": false,
+      "gender": 0,
+      "id": 2606119,
+      "known_for_department": "Acting",
+      "name": "Xavier Villeneuve",
+      "original_name": "Xavier Villeneuve",
+      "popularity": 0.3676,
+      "profile_path": null,
+      "known_for": [
+        {
+          "adult": false,
+          "backdrop_path": null,
+          "id": 47297,
+          "title": "Carrément à l'ouest",
+          "original_title": "Carrément à l'ouest",
+          "overview": "",
+          "poster_path": "/3YTkrqQugxZSqZORfx3A4C9YOq7.jpg",
+          "media_type": "movie",
+          "original_language": "fr",
+          "genre_ids": [35, 18],
+          "popularity": 1.0784,
+          "release_date": "2001-05-23",
+          "softcore": false,
+          "video": false,
+          "vote_average": 6.813,
+          "vote_count": 8
+        }
+      ]
+    },
+    {
+      "adult": false,
+      "gender": 0,
+      "id": 2406617,
+      "known_for_department": "Acting",
+      "name": "Villeneuve",
+      "original_name": "Villeneuve",
+      "popularity": 0.3663,
+      "profile_path": null,
+      "known_for": [
+        {
+          "adult": false,
+          "backdrop_path": null,
+          "id": 629685,
+          "title": "Jack",
+          "original_title": "Jack",
+          "overview": "",
+          "poster_path": null,
+          "media_type": "movie",
+          "original_language": "en",
+          "genre_ids": [18],
+          "popularity": 1.0236,
+          "release_date": "1913-09-19",
+          "softcore": false,
+          "video": false,
+          "vote_average": 10,
+          "vote_count": 1
+        }
+      ]
+    },
+    {
+      "adult": false,
+      "gender": 0,
+      "id": 5008983,
+      "known_for_department": "Acting",
+      "name": "Anna Villeneuve",
+      "original_name": "Anna Villeneuve",
+      "popularity": 0.6749,
+      "profile_path": "/y6ggSOYsUyGHlBuI1NAiAm6SQhj.jpg",
+      "known_for": [
+        {
+          "adult": false,
+          "backdrop_path": "/nsswDNdYwhGVkjCU2ILsEetP8Bw.jpg",
+          "id": 1579637,
+          "title": "PICTURE DAY",
+          "original_title": "PICTURE DAY",
+          "overview": "",
+          "poster_path": "/axIJopp3QaGyA1uro9jURJZ4AtX.jpg",
+          "media_type": "movie",
+          "original_language": "en",
+          "genre_ids": [18, 35],
+          "popularity": 2.0798,
+          "release_date": "2025-11-13",
+          "softcore": false,
+          "video": false,
+          "vote_average": 0,
+          "vote_count": 0
+        },
+        {
+          "adult": false,
+          "backdrop_path": null,
+          "id": 1635552,
+          "title": "Something Borrowed",
+          "original_title": "Something Borrowed",
+          "overview": "",
+          "poster_path": "/qOt2nPPzFoIvx5p4Qr6fyoCGHpK.jpg",
+          "media_type": "movie",
+          "original_language": "en",
+          "genre_ids": [27],
+          "popularity": 2.6274,
+          "release_date": "2026-07-21",
+          "softcore": false,
+          "video": false,
+          "vote_average": 0,
+          "vote_count": 0
+        }
+      ]
+    }
+  ],
+  "total_pages": 9,
+  "total_results": 165
+}

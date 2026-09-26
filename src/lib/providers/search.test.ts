@@ -119,4 +119,43 @@ describe('searchMedia', () => {
       SearchUnavailableError,
     );
   });
+
+  it('searches only people for the "person" filter', async () => {
+    const people = vi.fn(async () => ({
+      people: [{ id: 1, name: 'Denis Villeneuve', knownFor: [] }],
+      page: 1,
+      hasMore: true,
+    }));
+    const tmdb = provider(page([]));
+
+    const result = await searchMedia(
+      { ...query, type: 'person' },
+      { tmdb, openLibrary: provider(page([])), people },
+    );
+
+    expect(result).toMatchObject({
+      results: [],
+      people: [{ name: 'Denis Villeneuve' }],
+      hasMore: true,
+    });
+    expect(tmdb.search).not.toHaveBeenCalled();
+  });
+
+  it('adds a short people preview to "all" on the first page, ignoring its failures', async () => {
+    const many = Array.from({ length: 10 }, (_, i) => ({ id: i, name: `P${i}`, knownFor: [] }));
+    const deps = {
+      tmdb: provider(page([media('tmdb', 'm1')])),
+      google: provider(page([])),
+      openLibrary: provider(page([])),
+      people: vi.fn(async () => ({ people: many, page: 1, hasMore: false })),
+    };
+
+    expect((await searchMedia({ ...query, type: 'all' }, deps)).people).toHaveLength(6);
+    expect((await searchMedia({ ...query, type: 'all', page: 2 }, deps)).people).toEqual([]);
+
+    deps.people.mockRejectedValueOnce(new Error('down'));
+    const result = await searchMedia({ ...query, type: 'all' }, deps);
+    expect(result.people).toEqual([]);
+    expect(result.results).toHaveLength(1);
+  });
 });

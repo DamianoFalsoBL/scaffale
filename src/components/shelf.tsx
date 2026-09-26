@@ -17,8 +17,8 @@ export function Shelf({
   children,
 }: {
   title: string;
-  href: string;
-  count: number;
+  href?: string;
+  count?: number;
   children: React.ReactNode;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
@@ -60,9 +60,11 @@ export function Shelf({
       <div className="flex items-end justify-between gap-4 border-b pb-2">
         <h2 className="text-xl font-semibold">
           {title}
-          <span className="ml-2 align-middle font-sans text-sm font-normal text-muted-foreground tabular-nums">
-            {count}
-          </span>
+          {count !== undefined && (
+            <span className="ml-2 align-middle font-sans text-sm font-normal text-muted-foreground tabular-nums">
+              {count}
+            </span>
+          )}
         </h2>
         <div className="flex items-center gap-1">
           <div className="hidden items-center gap-1 sm:flex">
@@ -85,12 +87,14 @@ export function Shelf({
               <ChevronRight />
             </Button>
           </div>
-          <Link
-            href={href}
-            className="ml-2 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            Vedi tutti
-          </Link>
+          {href && (
+            <Link
+              href={href}
+              className="ml-2 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Vedi tutti
+            </Link>
+          )}
         </div>
       </div>
       <div

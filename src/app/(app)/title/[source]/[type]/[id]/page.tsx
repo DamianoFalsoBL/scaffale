@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { cache } from 'react';
+import { cache, Suspense } from 'react';
 
 import { AddToLibrary } from '@/components/add-to-library';
 import { BackLink } from '@/components/back-link';
 import { TitleDetails } from '@/components/title-details';
+import { TitleExtrasSection, TitleExtrasSkeleton } from '@/components/title-extras';
 import { markLibraryEntries } from '@/lib/library/matching';
 import { getLibraryIndex } from '@/lib/library/queries';
 import { titleParamsSchema, toTitleData } from '@/lib/library/title';
@@ -61,6 +62,13 @@ export default async function TitlePreviewPage({
           </div>
         }
       />
+      <Suspense fallback={<TitleExtrasSkeleton />}>
+        <TitleExtrasSection
+          source={media.source}
+          externalId={media.externalId}
+          mediaType={media.mediaType}
+        />
+      </Suspense>
     </div>
   );
 }

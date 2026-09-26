@@ -1,20 +1,21 @@
 'use client';
 
-import { AlertCircle, Info, Loader2, Search } from 'lucide-react';
-import Link from 'next/link';
+import { AlertCircle, Loader2, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import type { SearchResponse } from '@/app/api/search/route';
-import { AddToLibrary } from '@/components/add-to-library';
-import { MediaCard, MediaCardSkeleton } from '@/components/media-card';
+import { MediaCardSkeleton } from '@/components/media-card';
+import { PersonCard } from '@/components/person-card';
+import { ResultCard } from '@/components/result-card';
+import { Shelf } from '@/components/shelf';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { SEARCH_FILTER_LABELS } from '@/lib/media-labels';
 import type { SearchResultWithLibrary } from '@/lib/library/matching';
-import { titleHref } from '@/lib/library/title';
 import type { SearchFilter } from '@/lib/providers/search';
+import type { PersonSummary } from '@/lib/providers/tmdb';
 import { SEARCH_FILTERS } from '@/lib/validation/search';
 
 const MIN_QUERY_LENGTH = 2;
@@ -54,18 +55,18 @@ async function fetchSearch(q: string, type: SearchFilter, page: number, signal?:
 
 const mediaKey = (media: SearchResultWithLibrary) => `${media.source}:${media.externalId}`;
 
-/** Library titles open their page; the others open the preview. */
-function detailsHref(media: SearchResultWithLibrary) {
-  return media.library ? `/item/${media.library.mediaItemId}` : titleHref(media);
-}
-
-function authorsOf(media: SearchResultWithLibrary) {
-  return Array.isArray(media.extra.authors) ? (media.extra.authors as string[]) : [];
-}
-
 function appendUnique(current: SearchResultWithLibrary[], next: SearchResultWithLibrary[]) {
   const seen = new Set(current.map(mediaKey));
   return [...current, ...next.filter((media) => !seen.has(mediaKey(media)))];
+}
+
+function appendPeople(current: PersonSummary[], next: PersonSummary[]) {
+  const seen = new Set(current.map((person) => person.id));
+  return [...current, ...next.filter((person) => !seen.has(person.id))];
+}
+
+function personDetail(person: PersonSummary) {
+  return [person.department, person.knownFor[0]].filter(Boolean).join(' · ') || undefined;
 }
 
 export function SearchView({
@@ -126,6 +127,7 @@ export function SearchView({
               status: 'done',
               loadingMore: false,
               results: appendUnique(previous.results, next.results),
+              people: appendPeople(previous.people, next.people),
             }
           : previous,
       );
@@ -146,30 +148,33 @@ export function SearchView({
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Cerca film, serie o libri…"
+            placeholder="Cerca film, serie, libri o persone…"
             aria-label="Cerca"
             className="h-10 pl-9"
             autoFocus
           />
         </div>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          value={type}
-          onValueChange={(value) => value && setType(value as SearchFilter)}
-          aria-label="Filtra per tipo"
-        >
-          {SEARCH_FILTERS.map((filter) => (
-            <ToggleGroupItem key={filter} value={filter} className="px-4">
-              {SEARCH_FILTER_LABELS[filter]}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        {/* Scrolls sideways on narrow phones instead of wrapping. */}
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            value={type}
+            onValueChange={(value) => value && setType(value as SearchFilter)}
+            aria-label="Filtra per tipo"
+          >
+            {SEARCH_FILTERS.map((filter) => (
+              <ToggleGroupItem key={filter} value={filter} className="px-4">
+                {SEARCH_FILTER_LABELS[filter]}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
       </div>
 
       {!active ? (
         <p className="py-12 text-center text-muted-foreground">
-          Scrivi almeno {MIN_QUERY_LENGTH} caratteri per cercare tra film, serie e libri.
+          Scrivi almeno {MIN_QUERY_LENGTH} caratteri per cercare tra film, serie, libri e persone.
         </p>
       ) : !current ? (
         <ResultsGrid aria-busy>
@@ -192,34 +197,52 @@ export function SearchView({
               {UNAVAILABLE_MESSAGES[group]}
             </p>
           ))}
-          {current.results.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground">Nessun risultato per “{q}”.</p>
+          {type === 'person' ? (
+            current.people.length === 0 ? (
+              <p className="py-12 text-center text-muted-foreground">
+                Nessuna persona trovata per “{q}”.
+              </p>
+            ) : (
+              <ResultsGrid>
+                {current.people.map((person) => (
+                  <PersonCard
+                    key={person.id}
+                    id={person.id}
+                    name={person.name}
+                    profileUrl={person.profileUrl}
+                    detail={personDetail(person)}
+                  />
+                ))}
+              </ResultsGrid>
+            )
           ) : (
-            <ResultsGrid>
-              {current.results.map((media) => (
-                <MediaCard
-                  key={mediaKey(media)}
-                  media={{ ...media, authors: authorsOf(media) }}
-                  href={detailsHref(media)}
-                >
-                  {/* Side by side on desktop; stacked full-width on phones, where cards are narrow. */}
-                  <div className="flex w-full flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-1">
-                    <AddToLibrary media={media} className="px-2 max-sm:w-full" />
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="sm"
-                      className="px-2 text-muted-foreground max-sm:w-full"
-                    >
-                      <Link href={detailsHref(media)}>
-                        <Info aria-hidden />
-                        Dettagli
-                      </Link>
-                    </Button>
-                  </div>
-                </MediaCard>
-              ))}
-            </ResultsGrid>
+            <>
+              {current.people.length > 0 && (
+                <Shelf title="Persone">
+                  {current.people.map((person) => (
+                    <PersonCard
+                      key={person.id}
+                      id={person.id}
+                      name={person.name}
+                      profileUrl={person.profileUrl}
+                      detail={personDetail(person)}
+                      className="w-28 shrink-0 snap-start sm:w-32"
+                    />
+                  ))}
+                </Shelf>
+              )}
+              {current.results.length === 0 ? (
+                <p className="py-12 text-center text-muted-foreground">
+                  Nessun titolo trovato per “{q}”.
+                </p>
+              ) : (
+                <ResultsGrid>
+                  {current.results.map((media) => (
+                    <ResultCard key={mediaKey(media)} media={media} />
+                  ))}
+                </ResultsGrid>
+              )}
+            </>
           )}
           {current.hasMore && (
             <Button
