@@ -78,6 +78,33 @@ function WhereToWatch({ providers }: { providers: WatchProviders | null }) {
   );
 }
 
+type TitleRef = { source: Source; externalId: string; mediaType: MediaType };
+
+/**
+ * "Dove vederlo in Italia" on its own, for pages that show it higher up (the library
+ * detail puts it before "I miei dati"). Errors are reported by TitleExtrasSection.
+ */
+export async function WhereToWatchSection({ source, externalId, mediaType }: TitleRef) {
+  if (source !== 'tmdb' || mediaType === 'book') {
+    return null;
+  }
+  const extras = await getTitleExtras(externalId, mediaType).catch(() => null);
+  return extras ? <WhereToWatch providers={extras.providers} /> : null;
+}
+
+export function WhereToWatchSkeleton() {
+  return (
+    <div className="flex flex-col gap-3" aria-busy aria-label="Caricamento di dove vederlo">
+      <Skeleton className="h-7 w-52" />
+      <div className="flex gap-3">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} className="size-12 rounded-lg" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Cast, directors, streaming availability and recommendations for movies and series.
  * Rendered inside <Suspense>: the page shows first, this streams in when TMDB answers.
@@ -86,10 +113,10 @@ export async function TitleExtrasSection({
   source,
   externalId,
   mediaType,
-}: {
-  source: Source;
-  externalId: string;
-  mediaType: MediaType;
+  withProviders = true,
+}: TitleRef & {
+  /** False when the page already shows WhereToWatchSection. */
+  withProviders?: boolean;
 }) {
   if (source !== 'tmdb' || mediaType === 'book') {
     return null;
@@ -131,7 +158,7 @@ export async function TitleExtrasSection({
         </Shelf>
       )}
 
-      <WhereToWatch providers={extras.providers} />
+      {withProviders && <WhereToWatch providers={extras.providers} />}
 
       {recommendations.length > 0 && (
         <Shelf title="Titoli simili">

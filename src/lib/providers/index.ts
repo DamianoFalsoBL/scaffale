@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { cache } from 'react';
+
 import { serverEnv } from '@/lib/env.server';
 import { todayIso } from '@/lib/library/model';
 import type { SearchFilters } from '@/lib/search-filters';
@@ -62,10 +64,13 @@ function requireTmdb() {
   return tmdb;
 }
 
-/** Cast, directors, where to watch and recommendations for a movie or series. */
-export function getTitleExtras(externalId: string, type: 'movie' | 'tv') {
-  return requireTmdb().getExtras(externalId, type);
-}
+/**
+ * Cast, directors, where to watch and recommendations for a movie or series.
+ * Deduplicated per request: the detail page reads it from two sections.
+ */
+export const getTitleExtras = cache((externalId: string, type: 'movie' | 'tv') =>
+  requireTmdb().getExtras(externalId, type),
+);
 
 export function getPerson(id: number) {
   return requireTmdb().getPerson(id);

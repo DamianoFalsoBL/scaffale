@@ -6,7 +6,12 @@ import { cache, Suspense } from 'react';
 import { z } from 'zod';
 
 import { TitleDetails } from '@/components/title-details';
-import { TitleExtrasSection, TitleExtrasSkeleton } from '@/components/title-extras';
+import {
+  TitleExtrasSection,
+  TitleExtrasSkeleton,
+  WhereToWatchSection,
+  WhereToWatchSkeleton,
+} from '@/components/title-extras';
 import { getEntryByMediaItem } from '@/lib/library/queries';
 
 import { EntryForm } from './entry-form';
@@ -39,6 +44,17 @@ export default async function ItemPage({ params }: PageProps<'/item/[id]'>) {
 
       <TitleDetails item={item} />
 
+      {/* Streaming first: before deciding what to watch, where to watch it. Not for books. */}
+      {item.source === 'tmdb' && item.mediaType !== 'book' && (
+        <Suspense fallback={<WhereToWatchSkeleton />}>
+          <WhereToWatchSection
+            source={item.source}
+            externalId={item.externalId}
+            mediaType={item.mediaType}
+          />
+        </Suspense>
+      )}
+
       <section className="flex flex-col gap-4 rounded-md bg-card p-4 shadow-xs ring-1 ring-foreground/10 sm:p-6">
         <h2 className="text-lg font-semibold">I miei dati</h2>
         <EntryForm
@@ -61,6 +77,7 @@ export default async function ItemPage({ params }: PageProps<'/item/[id]'>) {
           source={item.source}
           externalId={item.externalId}
           mediaType={item.mediaType}
+          withProviders={false}
         />
       </Suspense>
 
