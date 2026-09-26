@@ -20,7 +20,9 @@
     "db:new": "supabase migration new",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts",
-    "auth:set-password": "node scripts/set-password.mjs"
+    "auth:set-password": "node scripts/set-password.mjs",
+    "e2e:user": "node scripts/e2e-user.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -40,6 +42,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^22.20.4",
     "@types/react": "^19",

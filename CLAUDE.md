@@ -8,7 +8,7 @@ Full spec: [docs/spec.md](docs/spec.md). Decisions that override the spec are li
 
 - Work one phase at a time (spec §9). Present a short plan and wait for confirmation before writing code.
 - Never invent APIs: check official docs (bundled Next.js docs in `node_modules/next/dist/docs/`, Supabase, TMDB, Google Books, Open Library). State doubts explicitly.
-- End of each phase: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm format:check` must pass; update `README.md` and `.env.example`; conventional commit.
+- End of each phase: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm format:check` must pass; update `README.md` and `.env.example`; conventional commit. Before merging to main also run `pnpm test:e2e` (Playwright, test account from `pnpm e2e:user`; never read or print `E2E_PASSWORD`).
 - Languages: code, identifiers, DB objects and commits in English; UI copy in Italian.
 
 ## Decisions (override the spec)

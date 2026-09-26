@@ -251,21 +251,33 @@ Per provarli in locale (con `pnpm dev` avviato) basta una richiesta con l'header
 
 ## Script
 
-| Comando                  | Descrizione                                                         |
-| ------------------------ | ------------------------------------------------------------------- |
-| `pnpm dev`               | Server di sviluppo (Turbopack)                                      |
-| `pnpm build`             | Build di produzione                                                 |
-| `pnpm start`             | Avvia la build di produzione                                        |
-| `pnpm lint`              | ESLint (`pnpm lint:fix` per le correzioni automatiche)              |
-| `pnpm typecheck`         | Genera i tipi delle route (`next typegen`) ed esegue `tsc --noEmit` |
-| `pnpm test`              | Vitest, una esecuzione (`pnpm test:watch` in watch mode)            |
-| `pnpm format`            | Prettier in scrittura (`pnpm format:check` solo verifica)           |
-| `pnpm db:new <nome>`     | Crea una nuova migrazione in `supabase/migrations`                  |
-| `pnpm db:push`           | Applica le migrazioni al progetto collegato                         |
-| `pnpm auth:set-password` | Imposta o cambia la password del tuo account (input nascosto)       |
-| `pnpm db:types`          | Genera `src/lib/supabase/database.types.ts` dal DB collegato        |
+| Comando                  | Descrizione                                                           |
+| ------------------------ | --------------------------------------------------------------------- |
+| `pnpm dev`               | Server di sviluppo (Turbopack)                                        |
+| `pnpm build`             | Build di produzione                                                   |
+| `pnpm start`             | Avvia la build di produzione                                          |
+| `pnpm lint`              | ESLint (`pnpm lint:fix` per le correzioni automatiche)                |
+| `pnpm typecheck`         | Genera i tipi delle route (`next typegen`) ed esegue `tsc --noEmit`   |
+| `pnpm test`              | Vitest, una esecuzione (`pnpm test:watch` in watch mode)              |
+| `pnpm format`            | Prettier in scrittura (`pnpm format:check` solo verifica)             |
+| `pnpm db:new <nome>`     | Crea una nuova migrazione in `supabase/migrations`                    |
+| `pnpm db:push`           | Applica le migrazioni al progetto collegato                           |
+| `pnpm auth:set-password` | Imposta o cambia la password del tuo account (input nascosto)         |
+| `pnpm db:types`          | Genera `src/lib/supabase/database.types.ts` dal DB collegato          |
+| `pnpm e2e:user`          | Crea (o reimposta) l'account dei test end-to-end, solo in locale      |
+| `pnpm test:e2e`          | Test end-to-end con Playwright sulla build di produzione (porta 3100) |
 
 `next build` non esegue più il lint, quindi prima di un commit lancia: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm format:check`.
+
+## Test end-to-end (Playwright)
+
+Coprono i percorsi principali con un browser vero (Chromium): accesso e pagine private, file dell'app installabile e pagina offline, ricerca → aggiunta → libreria → rimozione, ricerca ritrovata dopo "Indietro", filtri ed Esplora, stagioni (stato automatico e "Fino a qui"), liste (creazione dall'anteprima, filtro in Libreria, rinomina ed eliminazione) e, su telefono simulato (Pixel 7), voci dei menu alte almeno 44 px.
+
+1. Una volta sola: `pnpm exec playwright install chromium` (scarica il browser, circa 150 MB).
+2. Una volta sola (o per cambiare password): `pnpm e2e:user`. Crea l'account `e2e@scaffale.test` con una password casuale, salva `E2E_EMAIL` ed `E2E_PASSWORD` in `.env.local` (mai stampata) e aggiunge l'email ad `ALLOWED_EMAILS` **solo in locale**: su Vercel `ALLOWED_EMAILS` resta il tuo, quindi quell'account non entra nel sito vero.
+3. `pnpm test:e2e`: fa la build, la avvia sulla porta 3100 ed esegue i test uno alla volta (condividono l'account). Con `E2E_BASE_URL` usa un server già avviato.
+
+Il database è quello cloud: prima e dopo ogni esecuzione la libreria e le liste dell'account di prova vengono cancellate (`e2e/support/test-user.ts`, che si rifiuta di agire se `E2E_EMAIL` coincide con il tuo indirizzo). Le API (TMDB, Google Books) sono quelle vere, quindi i test sono pochi e mirati; un titolo sparito o rinominato su TMDB può richiedere di aggiornarli.
 
 ## Struttura
 
