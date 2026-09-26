@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { EntryCard } from '@/components/library-views';
 import { Shelf } from '@/components/shelf';
 import { Button } from '@/components/ui/button';
+import { getCurrentUser } from '@/lib/auth/session';
 import { greeting } from '@/lib/format';
 import type { LibraryEntry } from '@/lib/library/model';
 import { getLibrary } from '@/lib/library/queries';
@@ -134,14 +135,16 @@ function summary({
 }
 
 export default async function DashboardPage() {
-  const entries = await getLibrary();
+  const [entries, user] = await Promise.all([getLibrary(), getCurrentUser()]);
   const dashboard = buildDashboard(entries);
   const counts = dashboard.totals;
 
   if (entries.length === 0) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-semibold sm:text-4xl">{greeting()}</h1>
+        <h1 className="text-3xl font-semibold sm:text-4xl">
+          {greeting()}, {user?.name}
+        </h1>
         <div className="flex flex-col items-center gap-4 rounded-md border border-dashed bg-card px-6 py-16 text-center">
           <div className="space-y-1">
             <p className="font-heading text-xl font-medium">Benvenuto su Scaffale</p>
@@ -164,7 +167,9 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-5">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold sm:text-4xl">{greeting()}</h1>
+          <h1 className="text-3xl font-semibold sm:text-4xl">
+            {greeting()}, {user?.name}
+          </h1>
           <p className="text-muted-foreground">{summary(counts)}</p>
         </div>
         <dl className="grid grid-cols-3 gap-3">

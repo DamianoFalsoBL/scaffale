@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <AppHeader email={user.email} />
+      <AppHeader name={user.name} email={user.email} />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
       <MobileTabBar />
     </div>

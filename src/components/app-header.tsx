@@ -7,7 +7,7 @@ import { Logo } from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 
-export function AppHeader({ email }: { email: string }) {
+export function AppHeader({ name, email }: { name: string; email: string }) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
@@ -22,8 +22,11 @@ export function AppHeader({ email }: { email: string }) {
           <DesktopNav />
         </div>
         <div className="flex items-center gap-1">
-          <span className="mr-2 hidden max-w-56 truncate text-sm text-muted-foreground lg:inline">
-            {email}
+          <span
+            className="mr-2 hidden max-w-40 truncate text-sm text-muted-foreground sm:inline"
+            title={email}
+          >
+            {name}
           </span>
           <ThemeToggle />
           <form action={signOut}>

@@ -3,12 +3,15 @@ import 'server-only';
 import { cache } from 'react';
 
 import { isEmailAllowed } from '@/lib/auth/allowlist';
+import { displayName } from '@/lib/auth/display-name';
 import { serverEnv } from '@/lib/env.server';
 import { createClient } from '@/lib/supabase/server';
 
 export type CurrentUser = {
   id: string;
   email: string;
+  /** First name for the UI, e.g. "Damiano". */
+  name: string;
 };
 
 /**
@@ -23,11 +26,11 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     return null;
   }
 
-  const { sub, email } = data.claims;
+  const { sub, email, user_metadata: metadata } = data.claims;
 
   if (!email || !isEmailAllowed(email, serverEnv.ALLOWED_EMAILS)) {
     return null;
   }
 
-  return { id: sub, email };
+  return { id: sub, email, name: displayName(email, metadata) };
 });
