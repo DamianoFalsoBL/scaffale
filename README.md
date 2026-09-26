@@ -191,6 +191,15 @@ Tutte le chiamate alle API esterne partono **solo dal server** (`src/lib/provide
 
 Su alcune reti le connessioni **IPv6** verso CloudFront (la CDN di TMDB) vengono resettate durante l'handshake TLS: `curl -6` fallisce, `curl -4` funziona. Node prova prima IPv6 e non ripiega da solo. In quel caso metti `DNS_IPV4_FIRST=true` in `.env.local`: `src/instrumentation.ts` fa preferire IPv4 al server. Su Vercel non serve.
 
+## Deploy (Vercel)
+
+- **Produzione:** https://scaffale.damianofalso.com (alias: `scaffale-rho.vercel.app`). Progetto Vercel `scaffale` (scope `damianofalsobls-projects`, piano Hobby) collegato a GitHub `DamianoFalsoBL/scaffale`: ogni push su `main` va in produzione, gli altri branch creano un'anteprima (protetta dalla Vercel Authentication).
+- **Region:** `fra1` (Francoforte), la stessa di Supabase `eu-central-1` (`regions` in [vercel.json](vercel.json)).
+- **Variabili d'ambiente** (Production e Preview): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `ALLOWED_EMAILS`, e come _Sensitive_ `SUPABASE_SECRET_KEY`, `TMDB_READ_ACCESS_TOKEN`, `GOOGLE_BOOKS_API_KEY`, `CRON_SECRET`; solo in Production `NEXT_PUBLIC_SITE_URL=https://scaffale.damianofalso.com`. Per aggiungerne o cambiarne una senza scriverne il valore nel terminale: `vercel env add NOME production --sensitive --force` e il valore da stdin.
+- **Dominio:** su Cloudflare un record `CNAME scaffale → 7eea6669f682a33a.vercel-dns-017.com` in modalità **DNS only** (nuvoletta grigia); il certificato HTTPS lo emette Vercel.
+- **Supabase Auth:** `site_url` è il dominio di produzione; i redirect ammessi sono produzione, `scaffale-rho.vercel.app`, le anteprime `scaffale-*-damianofalsobls-projects.vercel.app` e `localhost:3000` (`supabase/config.toml`, applicati con `config diff` + `config push`).
+- `DNS_IPV4_FIRST` su Vercel non serve.
+
 ## Job pianificati (Vercel Cron)
 
 Definiti in [vercel.json](vercel.json). Sul piano Hobby girano al massimo una volta al giorno, con una tolleranza di un'ora sull'orario. Entrambe le route rispondono 401 senza `Authorization: Bearer <CRON_SECRET>`; Vercel manda l'header da solo.
