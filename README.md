@@ -127,11 +127,11 @@ Le variabili vengono validate con Zod in `src/lib/validation/env.ts`. Le usi cos
 
 Lo schema sta in [supabase/migrations](supabase/migrations). Le migrazioni sono l'unica fonte di verità: niente modifiche manuali dalla dashboard.
 
-| Tabella            | Contenuto                                  | Accesso (`authenticated`)                        |
-| ------------------ | ------------------------------------------ | ------------------------------------------------ |
-| `media_items`      | Catalogo condiviso (snapshot dei metadati) | Solo lettura; scrive il server con la secret key |
-| `user_entries`     | Stato, voto, date, note dell'utente        | CRUD sulle proprie righe (RLS)                   |
-| `episode_progress` | Episodi visti (Fase 2)                     | CRUD sulle proprie righe (RLS)                   |
+| Tabella           | Contenuto                                  | Accesso (`authenticated`)                               |
+| ----------------- | ------------------------------------------ | ------------------------------------------------------- |
+| `media_items`     | Catalogo condiviso (snapshot dei metadati) | Solo lettura; scrive il server con la secret key        |
+| `user_entries`    | Stato, voto, date, note dell'utente        | CRUD sulle proprie righe (RLS)                          |
+| `season_progress` | Stagioni viste di una serie (per voce)     | CRUD sulle proprie righe (RLS), solo sulle proprie voci |
 
 - **RLS** attiva su tutte le tabelle; `anon` non ha nessun permesso.
 - **Grant espliciti** nella migrazione: da ottobre 2026 Supabase non espone più le tabelle alla Data API in automatico.
@@ -192,6 +192,7 @@ Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incolla
 - **Persone:** filtro "Persone" nella ricerca e, in "Tutti", una riga con le prime 6 persone trovate. `/person/[id]` mostra biografia (in inglese se manca in italiano), date e filmografia divisa in **Regia** e **Recitazione** (senza interviste, talk show e filmati d'archivio), dalla più recente, con i titoli già in libreria segnati.
 - **Filtri ed Esplora:** pulsante "Filtri" sotto la barra di ricerca con genere (elenco adatto al tipo scelto), anno da/a, voto minimo TMDB, piattaforma in Italia (Netflix, Prime Video, Disney+, Apple TV, NOW, Sky Go, Paramount+, RaiPlay, Mediaset Infinity, TIMvision) e ordinamento. Con la barra vuota parte **Esplora** (TMDB Discover su film e serie: più popolari, voto più alto, più recenti); con del testo i filtri restringono i risultati. Tutto finisce nell'URL e i filtri attivi compaiono come chip rimovibili.
 - **Ricerca nella libreria per persona:** regia/ideazione e i 5 attori principali vengono salvati nella scheda del titolo, quindi "villeneuve" o "zendaya" trovano i titoli anche nella tua libreria.
+- **Stagioni viste** (serie): nella scheda di una serie in libreria ogni stagione si segna vista o no con un tocco, e "Fino a qui" segna tutte quelle uscite fino a quella scelta. Contano solo le stagioni già uscite: quelle future compaiono come "In arrivo" o "Annunciata", la stagione 0 (speciali) è esclusa. Lo stato cambia da solo quando segni stagioni: dalla prima si passa a "In corso"; con tutte viste diventa "Completata" solo se la serie è conclusa o cancellata, altrimenti resta "In corso" in attesa della prossima. Le card mostrano "Stagione 3 di 5" per le serie in corso e "Nuova stagione" per una serie finita che ne riceve un'altra. Dati in `season_progress` (legata alla voce: togliere il titolo dalla libreria cancella anche le stagioni); logica pura in `src/lib/library/seasons.ts`.
 - **`/item/[id]`** (id della scheda in `media_items`): metadati dalla scheda salvata (durata e tagline, stagioni ed episodi, autori, pagine, editore, ISBN), stato, voto a mezze stelle (salvato 1–10, usabile anche da tastiera), date, contatore visioni/letture, note, rimozione con conferma. La scheda condivisa resta nel catalogo.
 - **`/dashboard`:** completati per tipo, "In corso", "Da vedere e da leggere", "Completati di recente", completati per anno.
 - **Veste grafica "Carta e inchiostro":** fondo carta e testo inchiostro (versione scura in marrone caldo), titoli in Fraunces, accento ocra. Tipi: Film prugna, Serie TV verde, Libri blu inchiostro, controllati con il validatore di palette insieme all'accento (anche per daltonismo, chiaro e scuro); l'etichetta resta sempre scritta. Su telefono la navigazione è una barra in basso, come un'app.
@@ -231,10 +232,10 @@ Su alcune reti le connessioni **IPv6** verso CloudFront (la CDN di TMDB) vengono
 
 Definiti in [vercel.json](vercel.json). Sul piano Hobby girano al massimo una volta al giorno, con una tolleranza di un'ora sull'orario. Entrambe le route rispondono 401 senza `Authorization: Bearer <CRON_SECRET>`; Vercel manda l'header da solo.
 
-| Route                 | Quando (UTC) | Cosa fa                                                                                                                                                                                        |
-| --------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/api/cron/keepalive` | 03:00        | Query leggera su `media_items`: il piano free di Supabase mette in pausa i progetti dopo 7 giorni senza richieste                                                                              |
-| `/api/cron/refresh`   | 04:00        | Riscarica fino a 25 schede sincronizzate più di 150 giorni fa (TMDB vieta dati più vecchi di 6 mesi), una alla volta con pause di 250 ms; gli errori finiscono nei log e non bloccano il resto |
+| Route                 | Quando (UTC) | Cosa fa                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/cron/keepalive` | 03:00        | Query leggera su `media_items`: il piano free di Supabase mette in pausa i progetti dopo 7 giorni senza richieste                                                                                                                                                                                                                                              |
+| `/api/cron/refresh`   | 04:00        | Riscarica fino a 25 schede sincronizzate più di 150 giorni fa (TMDB vieta dati più vecchi di 6 mesi), una alla volta con pause di 250 ms; lo spazio che resta va alle serie ancora in produzione (stato TMDB diverso da conclusa/cancellata) non aggiornate da 7 giorni, così le nuove stagioni arrivano. Gli errori finiscono nei log e non bloccano il resto |
 
 Per provarli in locale (con `pnpm dev` avviato) basta una richiesta con l'header giusto, per esempio da Node, leggendo `CRON_SECRET` da `.env.local`.
 

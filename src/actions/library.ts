@@ -4,16 +4,20 @@ import { revalidatePath } from 'next/cache';
 
 import { getCurrentUser } from '@/lib/auth/session';
 import type { LibraryRef } from '@/lib/library/matching';
-import { applyStatusDefaults, todayIso, type EntryProgress } from '@/lib/library/model';
+import { parseExtra } from '@/lib/library/extra';
+import { applyStatusDefaults, asRecord, todayIso, type EntryProgress } from '@/lib/library/model';
 import { upsertMediaItem } from '@/lib/library/queries';
+import { statusAfterWatching, summarizeSeasons } from '@/lib/library/seasons';
 import { getDetails } from '@/lib/providers';
 import { isStatusAllowed, type EntryStatus } from '@/lib/status-labels';
 import { createClient } from '@/lib/supabase/server';
 import {
   addEntrySchema,
+  seasonsSchema,
   statusChangeSchema,
   updateEntrySchema,
   type AddEntryInput,
+  type SeasonsInput,
   type UpdateEntryInput,
 } from '@/lib/validation/library';
 
@@ -211,4 +215,68 @@ export async function removeEntry(entryId: string): Promise<ActionResult> {
 
   revalidateLibrary(data[0]?.media_item_id);
   return { ok: true, data: undefined };
+}
+
+export type SeasonsResult = { watchedSeasons: number[]; status: EntryStatus };
+
+/**
+ * Marks seasons of a series as seen (or not) and, when adding, moves the status on:
+ * see statusAfterWatching (first season → in progress; all seen and ended → completed).
+ */
+export async function setSeasonsWatched(input: SeasonsInput): Promise<ActionResult<SeasonsResult>> {
+  if (!(await getCurrentUser())) return fail(MESSAGES.session);
+
+  const parsed = seasonsSchema.safeParse(input);
+  if (!parsed.success) return fail(MESSAGES.invalid);
+  const { entryId, seasons, watched } = parsed.data;
+
+  const supabase = await createClient();
+  const { data: entry } = await supabase
+    .from('user_entries')
+    .select(
+      'status, media_item_id, media_items!inner(media_type, extra), season_progress(season_number)',
+    )
+    .eq('id', entryId)
+    .maybeSingle();
+  if (!entry) return fail(MESSAGES.notFound);
+  if (entry.media_items.media_type !== 'tv') return fail(MESSAGES.invalid);
+
+  const today = todayIso();
+  const { error } = watched
+    ? await supabase.from('season_progress').upsert(
+        seasons.map((season) => ({ entry_id: entryId, season_number: season, watched_on: today })),
+        { onConflict: 'entry_id,season_number', ignoreDuplicates: true },
+      )
+    : await supabase
+        .from('season_progress')
+        .delete()
+        .eq('entry_id', entryId)
+        .in('season_number', seasons);
+  if (error) {
+    console.error('setSeasonsWatched failed', { code: error.code });
+    return fail(MESSAGES.save);
+  }
+
+  const seen = new Set(entry.season_progress.map((row) => row.season_number));
+  for (const season of seasons) {
+    if (watched) seen.add(season);
+    else seen.delete(season);
+  }
+  const watchedSeasons = [...seen].sort((a, b) => a - b);
+
+  let status = entry.status;
+  if (watched) {
+    const parsedExtra = parseExtra('tv', asRecord(entry.media_items.extra));
+    if (parsedExtra.mediaType === 'tv') {
+      const summary = summarizeSeasons(parsedExtra.extra, watchedSeasons, today);
+      const next = statusAfterWatching(entry.status, summary, parsedExtra.extra.status);
+      if (next !== entry.status) {
+        const saved = await saveEntry(entryId, { status: next });
+        if (saved.ok) status = saved.data.status;
+      }
+    }
+  }
+
+  revalidateLibrary(entry.media_item_id);
+  return { ok: true, data: { watchedSeasons, status } };
 }

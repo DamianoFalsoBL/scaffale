@@ -19,11 +19,11 @@ values
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);
 
-insert into public.user_entries (media_item_id, status)
-values ('00000000-0000-4000-b000-000000000001', 'in_progress');
+insert into public.user_entries (id, media_item_id, status)
+values ('00000000-0000-4000-c000-000000000001', '00000000-0000-4000-b000-000000000001', 'in_progress');
 
-insert into public.episode_progress (media_item_id, season_number, episode_number)
-values ('00000000-0000-4000-b000-000000000001', 1, 1);
+insert into public.season_progress (entry_id, season_number)
+values ('00000000-0000-4000-c000-000000000001', 1);
 
 do $$
 begin
@@ -33,6 +33,9 @@ begin
   -- Only the test rows: the real catalog may contain other items.
   if (select count(*) from public.media_items where id::text like '00000000-0000-4000-b000-%') <> 2 then
     raise exception 'FAIL: signed-in users should read the whole catalog';
+  end if;
+  if (select count(*) from public.season_progress) <> 1 then
+    raise exception 'FAIL: user A should see their season progress';
   end if;
 end $$;
 
@@ -65,8 +68,8 @@ begin
   if (select count(*) from public.user_entries) <> 0 then
     raise exception 'FAIL: user B can read user A entries';
   end if;
-  if (select count(*) from public.episode_progress) <> 0 then
-    raise exception 'FAIL: user B can read user A episode progress';
+  if (select count(*) from public.season_progress) <> 0 then
+    raise exception 'FAIL: user B can read user A season progress';
   end if;
 
   update public.user_entries set notes = 'hacked';
@@ -75,11 +78,21 @@ begin
     raise exception 'FAIL: user B updated user A entries';
   end if;
 
-  delete from public.episode_progress;
+  delete from public.season_progress;
   get diagnostics affected = row_count;
   if affected <> 0 then
-    raise exception 'FAIL: user B deleted user A episode progress';
+    raise exception 'FAIL: user B deleted user A season progress';
   end if;
+end $$;
+
+-- B cannot attach season progress to A's entry, even as its own row.
+do $$
+begin
+  insert into public.season_progress (entry_id, season_number)
+  values ('00000000-0000-4000-c000-000000000001', 2);
+  raise exception 'FAIL: user B added season progress to user A entry';
+exception
+  when insufficient_privilege then null; -- RLS violation (42501)
 end $$;
 
 -- B cannot insert rows on behalf of A.
@@ -100,6 +113,14 @@ do $$
 begin
   perform 1 from public.media_items;
   raise exception 'FAIL: anon can read media_items';
+exception
+  when insufficient_privilege then null;
+end $$;
+
+do $$
+begin
+  perform 1 from public.season_progress;
+  raise exception 'FAIL: anon can read season_progress';
 exception
   when insufficient_privilege then null;
 end $$;

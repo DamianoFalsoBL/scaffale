@@ -5,12 +5,22 @@ import { MediaCard } from '@/components/media-card';
 import { Poster } from '@/components/poster';
 import { RatingStars } from '@/components/star-rating';
 import { formatAuthors, formatDate } from '@/lib/format';
-import type { LibraryEntry } from '@/lib/library/model';
+import { parseExtra } from '@/lib/library/extra';
+import { todayIso, type LibraryEntry } from '@/lib/library/model';
+import { seasonNote, summarizeSeasons } from '@/lib/library/seasons';
 import { MEDIA_TYPE_LABELS } from '@/lib/media-labels';
 
 export function authorsOf(entry: LibraryEntry) {
   const authors = entry.item.extra.authors;
   return Array.isArray(authors) ? authors.filter((a): a is string => typeof a === 'string') : [];
+}
+
+/** "Stagione 3 di 5" / "Nuova stagione" for series, from the seasons marked as seen. */
+export function entryNote(entry: LibraryEntry) {
+  if (entry.item.mediaType !== 'tv') return undefined;
+  const parsed = parseExtra('tv', entry.item.extra);
+  if (parsed.mediaType !== 'tv') return undefined;
+  return seasonNote(entry.status, summarizeSeasons(parsed.extra, entry.watchedSeasons, todayIso()));
 }
 
 export function entryHref(entry: LibraryEntry) {
@@ -20,7 +30,7 @@ export function entryHref(entry: LibraryEntry) {
 export function EntryCard({ entry, showType }: { entry: LibraryEntry; showType?: boolean }) {
   return (
     <MediaCard
-      media={{ ...entry.item, authors: authorsOf(entry) }}
+      media={{ ...entry.item, authors: authorsOf(entry), note: entryNote(entry) }}
       href={entryHref(entry)}
       showType={showType}
     >
@@ -55,6 +65,7 @@ export function EntryList({ entries }: { entries: LibraryEntry[] }) {
           MEDIA_TYPE_LABELS[entry.item.mediaType],
           entry.item.year,
           formatAuthors(authorsOf(entry)),
+          entryNote(entry),
         ].filter(Boolean);
         const finished = formatDate(entry.finishedAt);
 

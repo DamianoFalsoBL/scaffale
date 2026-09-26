@@ -29,6 +29,7 @@ function entry(
     notes: null,
     createdAt: `2026-01-${String(seq).padStart(2, '0')}T10:00:00Z`,
     updatedAt: `2026-01-${String(seq).padStart(2, '0')}T10:00:00Z`,
+    watchedSeasons: [],
     ...rest,
     item: {
       id: `m${seq}`,
@@ -150,10 +151,12 @@ describe('row mapping', () => {
         last_synced_at: '2026-05-01T00:00:00Z',
         created_at: '2026-05-01T00:00:00Z',
       },
+      season_progress: [{ season_number: 2 }, { season_number: 1 }],
     } satisfies LibraryRow;
 
     expect(toLibraryEntry(row)).toMatchObject({
       rating: 8,
+      watchedSeasons: [1, 2],
       finishedAt: '2026-05-01',
       item: { mediaType: 'book', extra: { authors: ['Umberto Eco'] } },
     });

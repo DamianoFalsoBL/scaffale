@@ -12,43 +12,33 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      episode_progress: {
-        Row: {
-          episode_number: number
-          id: string
-          media_item_id: string
-          season_number: number
-          user_id: string
-          watched_at: string
-        }
-        Insert: {
-          episode_number: number
-          id?: string
-          media_item_id: string
-          season_number: number
-          user_id?: string
-          watched_at?: string
-        }
-        Update: {
-          episode_number?: number
-          id?: string
-          media_item_id?: string
-          season_number?: number
-          user_id?: string
-          watched_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "episode_progress_media_item_id_fkey"
-            columns: ["media_item_id"]
-            isOneToOne: false
-            referencedRelation: "media_items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       media_items: {
         Row: {
           created_at: string
@@ -99,6 +89,41 @@ export type Database = {
           year?: number | null
         }
         Relationships: []
+      }
+      season_progress: {
+        Row: {
+          created_at: string
+          entry_id: string
+          id: string
+          season_number: number
+          user_id: string
+          watched_on: string
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          id?: string
+          season_number: number
+          user_id?: string
+          watched_on?: string
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          id?: string
+          season_number?: number
+          user_id?: string
+          watched_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_progress_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "user_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_entries: {
         Row: {
@@ -291,6 +316,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       entry_status: [

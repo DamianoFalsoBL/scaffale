@@ -11,10 +11,14 @@ import {
   WhereToWatchSection,
   WhereToWatchSkeleton,
 } from '@/components/title-extras';
+import { parseExtra } from '@/lib/library/extra';
+import { todayIso } from '@/lib/library/model';
 import { getEntryByMediaItem } from '@/lib/library/queries';
+import { seasonList } from '@/lib/library/seasons';
 
 import { EntryForm } from './entry-form';
 import { RemoveEntryButton } from './remove-entry-button';
+import { SeasonTracker } from './season-tracker';
 
 const loadEntry = cache(async (id: string) =>
   z.uuid().safeParse(id).success ? getEntryByMediaItem(id) : null,
@@ -30,13 +34,27 @@ export default async function ItemPage({ params }: PageProps<'/item/[id]'>) {
   if (!entry) notFound();
 
   const { item } = entry;
+  const parsed = parseExtra(item.mediaType, item.extra);
+  const seasons = parsed.mediaType === 'tv' ? seasonList(parsed.extra, todayIso()) : [];
 
   return (
     <div className="flex flex-col gap-8">
       {/* Back to wherever the title was opened from (library, search, dashboard…). */}
       <BackLink fallback="/library" label="Indietro" />
 
-      <TitleDetails item={item} />
+      <TitleDetails
+        item={item}
+        seasons={
+          seasons.length > 0 ? (
+            <SeasonTracker
+              entryId={entry.id}
+              status={entry.status}
+              seasons={seasons}
+              watched={entry.watchedSeasons}
+            />
+          ) : undefined
+        }
+      />
 
       {/* Streaming first: before deciding what to watch, where to watch it. Not for books. */}
       {item.source === 'tmdb' && item.mediaType !== 'book' && (

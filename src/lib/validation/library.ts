@@ -38,6 +38,13 @@ export const updateEntrySchema = z
     path: ['finishedAt'],
   });
 
+/** Mark seasons as seen (or not): one season, or every one up to a season ("fino a qui"). */
+export const seasonsSchema = z.object({
+  entryId: z.uuid(),
+  seasons: z.array(z.number().int().min(1).max(500)).min(1).max(100),
+  watched: z.boolean(),
+});
+
 export const LIBRARY_SORTS = ['added', 'title', 'rating', 'year'] as const;
 export const LIBRARY_VIEWS = ['grid', 'list'] as const;
 
@@ -52,4 +59,5 @@ export const libraryParamsSchema = z.object({
 
 export type AddEntryInput = z.infer<typeof addEntrySchema>;
 export type UpdateEntryInput = z.infer<typeof updateEntrySchema>;
+export type SeasonsInput = z.infer<typeof seasonsSchema>;
 export type LibraryParams = z.infer<typeof libraryParamsSchema>;

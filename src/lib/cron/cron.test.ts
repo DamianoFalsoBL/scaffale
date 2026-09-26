@@ -69,6 +69,33 @@ describe('refreshStaleItems', () => {
     });
   });
 
+  it('fills the batch with running series due for their weekly check', async () => {
+    const item = (id: string): StaleItem => ({
+      id,
+      source: 'tmdb',
+      externalId: id,
+      mediaType: 'tv',
+    });
+    const loadRunningSeries = vi.fn(async () => [item('a'), item('s1'), item('s2')]);
+    const save = vi.fn<(id: string, media: NormalizedMedia) => Promise<void>>(async () => {});
+
+    const summary = await refreshStaleItems(
+      {
+        loadStale: async () => [item('a')],
+        loadRunningSeries,
+        fetchDetails: async (stale) => media(stale),
+        save,
+        sleep: async () => {},
+      },
+      { now: new Date('2026-09-26T00:00:00Z'), limit: 2 },
+    );
+
+    expect(loadRunningSeries).toHaveBeenCalledWith('2026-09-19T00:00:00.000Z', 2);
+    // Deduplicated and capped at the batch size.
+    expect(save.mock.calls.map(([id]) => id)).toEqual(['a', 's1']);
+    expect(summary.refreshed).toBe(2);
+  });
+
   it('does nothing when the catalog is fresh', async () => {
     const summary = await refreshStaleItems({
       loadStale: async () => [],

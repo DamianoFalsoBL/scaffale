@@ -54,9 +54,18 @@ function factsFor(item: TitleData, parsed: ParsedExtra): string[] {
 /**
  * Title sheet shared by the library detail page and the search preview:
  * poster, titles, facts, genres, overview, seasons and the data source.
- * `actions` sits right under the heading (e.g. the add button in the preview).
+ * `actions` sits right under the heading (e.g. the add button in the preview);
+ * `seasons` replaces the plain season list (the library page passes the season tracker).
  */
-export function TitleDetails({ item, actions }: { item: TitleData; actions?: React.ReactNode }) {
+export function TitleDetails({
+  item,
+  actions,
+  seasons: seasonsSlot,
+}: {
+  item: TitleData;
+  actions?: React.ReactNode;
+  seasons?: React.ReactNode;
+}) {
   const parsed = parseExtra(item.mediaType, item.extra);
   const facts = factsFor(item, parsed);
   const seasons =
@@ -123,21 +132,22 @@ export function TitleDetails({ item, actions }: { item: TitleData; actions?: Rea
           <p className="text-muted-foreground">Nessuna trama disponibile.</p>
         )}
 
-        {seasons.length > 0 && (
-          <section className="space-y-2">
-            <h2 className="font-medium">Stagioni</h2>
-            <ul className="divide-y rounded-md bg-card text-sm shadow-xs ring-1 ring-foreground/10">
-              {seasons.map((season) => (
-                <li key={season.seasonNumber} className="flex justify-between gap-4 px-3 py-2">
-                  <span>{season.name}</span>
-                  <span className="text-muted-foreground tabular-nums">
-                    {season.episodeCount} episodi
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        {seasonsSlot ??
+          (seasons.length > 0 && (
+            <section className="space-y-2">
+              <h2 className="font-medium">Stagioni</h2>
+              <ul className="divide-y rounded-md bg-card text-sm shadow-xs ring-1 ring-foreground/10">
+                {seasons.map((season) => (
+                  <li key={season.seasonNumber} className="flex justify-between gap-4 px-3 py-2">
+                    <span>{season.name}</span>
+                    <span className="text-muted-foreground tabular-nums">
+                      {season.episodeCount} episodi
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
 
         <a
           href={sourceUrl(item)}
