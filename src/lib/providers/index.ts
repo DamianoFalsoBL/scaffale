@@ -4,6 +4,7 @@ import { cache } from 'react';
 
 import { serverEnv } from '@/lib/env.server';
 import { todayIso } from '@/lib/library/model';
+import { releaseDiscover, type ReleaseBatch, type ReleaseKind } from '@/lib/releases';
 import type { SearchFilters } from '@/lib/search-filters';
 
 import { createGoogleBooksProvider } from './google-books';
@@ -71,6 +72,37 @@ function requireTmdb() {
 export const getTitleExtras = cache((externalId: string, type: 'movie' | 'tv') =>
   requireTmdb().getExtras(externalId, type),
 );
+
+/** Release calendars change a few times a day at most. */
+const RELEASES_REVALIDATE = 21_600;
+
+/**
+ * Movies and series out in Italy on each day, one Discover request per day and kind.
+ * A failed request leaves that day/kind empty and sets `incomplete`.
+ */
+export async function getReleases(days: string[], kinds: ReleaseKind[]) {
+  const client = requireTmdb();
+  const jobs = days.flatMap((day) => kinds.map((kind) => ({ day, kind })));
+  const settled = await Promise.allSettled(
+    jobs.map(({ day, kind }) => {
+      const { type, params } = releaseDiscover(kind, day);
+      return client.discover(type, params, RELEASES_REVALIDATE);
+    }),
+  );
+
+  const batches: ReleaseBatch[] = jobs.map((job, i) => {
+    const outcome = settled[i];
+    return { ...job, results: outcome?.status === 'fulfilled' ? outcome.value.results : [] };
+  });
+  const failures = settled.filter((outcome) => outcome.status === 'rejected');
+  if (failures.length > 0) {
+    console.warn('Some release requests failed', {
+      failed: failures.length,
+      reason: String(failures[0]?.reason),
+    });
+  }
+  return { batches, incomplete: failures.length > 0 };
+}
 
 export function getPerson(id: number) {
   return requireTmdb().getPerson(id);

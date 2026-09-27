@@ -84,7 +84,7 @@ export function yearRangeLabel({ from, to }: Pick<SearchFilters, 'from' | 'to'>)
 const MIN_VOTES = { browse: 10, popularSeries: 50, rated: 100, topRated: 300 };
 
 /** News, soap and talk shows swamp the series lists (TMDB tv genre ids). */
-const EXCLUDED_TV_GENRES = [10763, 10766, 10767];
+export const EXCLUDED_TV_GENRES = [10763, 10766, 10767];
 
 /**
  * Filters applied to text-search results, where TMDB only accepts an exact year:

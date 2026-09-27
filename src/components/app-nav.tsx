@@ -1,6 +1,6 @@
 'use client';
 
-import { House, LibraryBig, Search } from 'lucide-react';
+import { CalendarDays, House, LibraryBig, Search } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: 'Home', icon: House },
   { href: '/library', label: 'Libreria', icon: LibraryBig },
   { href: '/search', label: 'Cerca', icon: Search },
+  { href: '/releases', label: 'Uscite', icon: CalendarDays },
 ] as const;
 
 const noSubscribe = () => () => {};
@@ -71,7 +72,7 @@ export function MobileTabBar() {
       aria-label="Sezioni"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
     >
-      <ul className="grid grid-cols-3">
+      <ul className="grid grid-cols-4">
         {items.map(({ href, link, label, icon: Icon }) => {
           const active = isActive(href);
           return (

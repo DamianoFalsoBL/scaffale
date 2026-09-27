@@ -5,7 +5,8 @@ const PREVIEW = '/title/tmdb/tv/1396';
 
 test('tracks seasons and moves the status on by itself', async ({ page }) => {
   await page.goto(PREVIEW);
-  await page.getByRole('button', { name: 'Aggiungi', exact: true }).click();
+  // The title's own button comes first; recommendations have their own "Aggiungi".
+  await page.getByRole('button', { name: 'Aggiungi', exact: true }).first().click();
   await page.getByRole('menuitem', { name: 'Da vedere', exact: true }).click();
   // The preview moves to the full detail once the title is saved.
   await page.waitForURL(/\/item\//);

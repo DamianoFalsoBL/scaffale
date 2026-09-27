@@ -773,9 +773,13 @@ export function createTmdbProvider({
     },
 
     /** TMDB Discover: titles by criteria, no text (params from discoverParams). */
-    async discover(type: 'movie' | 'tv', params: Record<string, string>): Promise<SearchPage> {
+    async discover(
+      type: 'movie' | 'tv',
+      params: Record<string, string>,
+      revalidate = SEARCH_REVALIDATE,
+    ): Promise<SearchPage> {
       const [data, genres] = await Promise.all([
-        request(`/discover/${type}`, params, searchResponseSchema, SEARCH_REVALIDATE),
+        request(`/discover/${type}`, params, searchResponseSchema, revalidate),
         genreNames(),
       ]);
       const results =

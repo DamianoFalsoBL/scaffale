@@ -2,7 +2,7 @@
 
 Tracker personale di film, serie TV e libri. Uso personale, non commerciale.
 
-Stato: **Fase 4 completata**: online su https://scaffale.damianofalso.com. Fatti anche veste grafica, scheda dettagli, ricerca per persona, filtri/Esplora e webapp installabile con accesso tramite passkey. Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
+Stato: **Fase 4 completata**: online su https://scaffale.damianofalso.com. Fatti anche veste grafica, scheda dettagli, ricerca per persona, filtri/Esplora, webapp installabile con accesso tramite passkey, stagioni viste, liste e calendario delle uscite. Specifica completa e fasi in [docs/spec.md](docs/spec.md); convenzioni e decisioni in [CLAUDE.md](CLAUDE.md).
 
 ## Stack
 
@@ -197,6 +197,7 @@ Lo script termina con `ROLLBACK`, quindi non lascia dati. Per eseguirlo, incolla
 - **Liste:** in Libreria una riga di chip filtra per lista ("Tutti i titoli" toglie il filtro; parametro `list` nell'URL, una lista sconosciuta mostra tutto). "Gestisci liste" (`/library/lists`) crea, rinomina ed elimina le liste; eliminare una lista non toglie i titoli dalla libreria. Nella scheda di un titolo la sezione "Liste" mostra quelle che lo contengono (con la × per toglierlo) e "Aggiungi a lista…" (anche "Nuova lista…", creata e spuntata subito). Nell'anteprima di un titolo non in libreria "Aggiungi a lista…" lo aggiunge prima come "Da vedere"/"Da leggere" e poi apre la sua scheda. Le liste contengono solo voci della libreria: togliere un titolo dalla libreria lo toglie da tutte. Azioni in `src/actions/lists.ts`, riepiloghi puri in `src/lib/library/lists.ts`.
 - **Stagioni viste** (serie): nella scheda di una serie in libreria ogni stagione si segna vista o no con un tocco, e "Fino a qui" segna tutte quelle uscite fino a quella scelta. Contano solo le stagioni già uscite: quelle future compaiono come "In arrivo" o "Annunciata", la stagione 0 (speciali) è esclusa. Lo stato cambia da solo quando segni stagioni: dalla prima si passa a "In corso"; con tutte viste diventa "Completata" solo se la serie è conclusa o cancellata, altrimenti resta "In corso" in attesa della prossima. Le card mostrano "Stagione 3 di 5" per le serie in corso e "Nuova stagione" per una serie finita che ne riceve un'altra. Dati in `season_progress` (legata alla voce: togliere il titolo dalla libreria cancella anche le stagioni); logica pura in `src/lib/library/seasons.ts`.
 - **`/item/[id]`** (id della scheda in `media_items`): metadati dalla scheda salvata (durata e tagline, stagioni ed episodi, autori, pagine, editore, ISBN), stato, voto a mezze stelle (salvato 1–10, usabile anche da tastiera), date, contatore visioni/letture, note, rimozione con conferma. La scheda condivisa resta nel catalogo.
+- **`/releases` (Uscite):** calendario settimanale (da lunedì, frecce per cambiare settimana, "Oggi" salta al giorno corrente, filtro Tutto/Film/Serie; `week` e `type` nell'URL). Per ogni giorno: le **nuove stagioni delle tue serie** (dalle date delle stagioni salvate nella scheda, aggiornate ogni settimana dal cron; esclude le serie abbandonate), i film usciti **al cinema** e **in streaming** in Italia e le **nuove serie**. Dati TMDB dal vivo, niente nel database: una richiesta Discover per giorno e tipo (21 a settimana, in cache 6 ore), perché i risultati riportano solo la data di uscita mondiale mentre il filtro usa quella italiana (`region=IT` + `with_release_type` 2|3 cinema, 4 digitale). Per le serie TMDB ha solo la data del primo episodio nel mondo: si mostrano quelle disponibili in abbonamento su una piattaforma italiana (`watch_region=IT`, `flatrate`), senza news, soap e talk show. I libri non ci sono: Google Books e Open Library non hanno un calendario delle uscite. Logica pura in `src/lib/releases.ts`.
 - **`/dashboard`:** completati per tipo, "In corso", "Da vedere e da leggere", "Completati di recente", completati per anno.
 - **Veste grafica "Carta e inchiostro":** fondo carta e testo inchiostro (versione scura in marrone caldo), titoli in Fraunces, accento ocra. Tipi: Film prugna, Serie TV verde, Libri blu inchiostro, controllati con il validatore di palette insieme all'accento (anche per daltonismo, chiaro e scuro); l'etichetta resta sempre scritta. Su telefono la navigazione è una barra in basso, come un'app.
 
@@ -271,7 +272,7 @@ Per provarli in locale (con `pnpm dev` avviato) basta una richiesta con l'header
 
 ## Test end-to-end (Playwright)
 
-Coprono i percorsi principali con un browser vero (Chromium): accesso e pagine private, file dell'app installabile e pagina offline, ricerca → aggiunta → libreria → rimozione, ricerca ritrovata dopo "Indietro", filtri ed Esplora, stagioni (stato automatico e "Fino a qui"), liste (creazione dall'anteprima, filtro in Libreria, rinomina ed eliminazione) e, su telefono simulato (Pixel 7), voci dei menu alte almeno 44 px.
+Coprono i percorsi principali con un browser vero (Chromium): accesso e pagine private, file dell'app installabile e pagina offline, ricerca → aggiunta → libreria → rimozione, ricerca ritrovata dopo "Indietro", filtri ed Esplora, stagioni (stato automatico e "Fino a qui"), liste (creazione dall'anteprima, filtro in Libreria, rinomina ed eliminazione), uscite (settimana giorno per giorno, frecce, filtro per tipo) e, su telefono simulato (Pixel 7), voci dei menu alte almeno 44 px.
 
 1. Una volta sola: `pnpm exec playwright install chromium` (scarica il browser, circa 150 MB).
 2. Una volta sola (o per cambiare password): `pnpm e2e:user`. Crea l'account `e2e@scaffale.test` con una password casuale, salva `E2E_EMAIL` ed `E2E_PASSWORD` in `.env.local` (mai stampata) e aggiunge l'email ad `ALLOWED_EMAILS` **solo in locale**: su Vercel `ALLOWED_EMAILS` resta il tuo, quindi quell'account non entra nel sito vero.
@@ -287,7 +288,7 @@ src/
   actions/           # Server Actions: auth (login con password, logout), library (aggiungi, modifica, rimuovi)
   app/
     (auth)/login/    # Pagina di login
-    (app)/           # Area protetta: dashboard, library, item/[id], search
+    (app)/           # Area protetta: dashboard, library, item/[id], search, releases
     api/search/      # Route della ricerca unificata
   components/        # Componenti dell'app (ThemeProvider, ThemeToggle…)
     ui/              # Componenti shadcn/ui (generati con `pnpm dlx shadcn@latest add …`)

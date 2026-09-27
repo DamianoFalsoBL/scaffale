@@ -284,11 +284,19 @@ describe('markLibraryEntries', () => {
     { source: 'tmdb', externalId: '2', mediaType: 'movie', title: 'C', extra: {} },
   ];
 
-  it('matches by source and id, and books by ISBN across sources', () => {
+  it('matches by source, type and id, and books by ISBN across sources', () => {
     const marked = markLibraryEntries(results, [
-      { source: 'tmdb', externalId: '1', isbn13: null, mediaItemId: 'm1', status: 'completed' },
+      {
+        source: 'tmdb',
+        mediaType: 'movie',
+        externalId: '1',
+        isbn13: null,
+        mediaItemId: 'm1',
+        status: 'completed',
+      },
       {
         source: 'open_library',
+        mediaType: 'book',
         externalId: 'OL1W',
         isbn13: '9788845210662',
         mediaItemId: 'm2',
@@ -297,5 +305,22 @@ describe('markLibraryEntries', () => {
     ]);
 
     expect(marked.map((m) => m.library?.mediaItemId)).toEqual(['m1', 'm2', undefined]);
+  });
+
+  it('does not confuse a TMDB series with the movie that has the same id', () => {
+    const marked = markLibraryEntries(
+      [{ source: 'tmdb', externalId: '2', mediaType: 'tv', title: 'S', extra: {} }],
+      [
+        {
+          source: 'tmdb',
+          mediaType: 'movie',
+          externalId: '2',
+          isbn13: null,
+          mediaItemId: 'm3',
+          status: 'planned',
+        },
+      ],
+    );
+    expect(marked[0]?.library).toBeUndefined();
   });
 });

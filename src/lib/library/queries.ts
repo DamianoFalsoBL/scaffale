@@ -45,7 +45,7 @@ export async function getLibraryIndex(): Promise<LibraryIndexRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('user_entries')
-    .select('media_item_id, status, media_items!inner(source, external_id, isbn13)')
+    .select('media_item_id, status, media_items!inner(source, media_type, external_id, isbn13)')
     .limit(MAX_ENTRIES);
 
   if (error) {
@@ -55,6 +55,7 @@ export async function getLibraryIndex(): Promise<LibraryIndexRow[]> {
     mediaItemId: row.media_item_id,
     status: row.status,
     source: row.media_items.source,
+    mediaType: row.media_items.media_type,
     externalId: row.media_items.external_id,
     isbn13: row.media_items.isbn13,
   }));
