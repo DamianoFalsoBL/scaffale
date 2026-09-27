@@ -1,3 +1,4 @@
+import { watchProviderIds, type WatchProviderSlug } from '@/lib/catalogs';
 import type { MediaType } from '@/lib/providers/types';
 import type { EntryStatus } from '@/lib/status-labels';
 
@@ -11,7 +12,12 @@ export interface LibraryFilters {
   q: string;
   /** A list id; empty or missing = every entry. */
   list?: string;
+  /** A streaming platform: only movies and series available on it (see `availability`). */
+  provider?: WatchProviderSlug | '';
 }
+
+/** Platform ids (TMDB) streaming each catalog item, by item id; missing = unknown. */
+export type StreamingAvailability = ReadonlyMap<string, readonly number[]>;
 
 /** Lowercase, without accents: "Perché" matches "perche". */
 export function normalizeText(text: string) {
@@ -39,14 +45,20 @@ function searchableText(entry: LibraryEntry) {
   );
 }
 
-export function filterEntries(entries: readonly LibraryEntry[], filters: LibraryFilters) {
+export function filterEntries(
+  entries: readonly LibraryEntry[],
+  filters: LibraryFilters,
+  availability: StreamingAvailability = new Map(),
+) {
   const query = normalizeText(filters.q);
+  const providerIds = filters.provider ? watchProviderIds(filters.provider) : undefined;
 
   return entries.filter(
     (entry) =>
       (filters.type === 'all' || entry.item.mediaType === filters.type) &&
       (filters.status === 'all' || entry.status === filters.status) &&
       (!filters.list || entry.listIds.includes(filters.list)) &&
+      (!providerIds || (availability.get(entry.item.id) ?? []).some((id) => providerIds.has(id))) &&
       (!query || searchableText(entry).includes(query)),
   );
 }

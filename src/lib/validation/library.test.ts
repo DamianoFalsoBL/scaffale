@@ -65,6 +65,7 @@ describe('libraryParamsSchema', () => {
         sort: 'y',
         view: 'z',
         list: 'not-a-uuid',
+        provider: 'blockbuster',
       }),
     ).toEqual({
       type: 'all',
@@ -73,6 +74,7 @@ describe('libraryParamsSchema', () => {
       view: 'grid',
       q: '',
       list: '',
+      provider: '',
     });
   });
 
@@ -85,6 +87,7 @@ describe('libraryParamsSchema', () => {
         view: 'list',
         q: 'eco',
         list: '0f8fad5b-d9cb-469f-a165-70867728950e',
+        provider: 'netflix',
       }),
     ).toEqual({
       type: 'book',
@@ -93,6 +96,7 @@ describe('libraryParamsSchema', () => {
       view: 'list',
       q: 'eco',
       list: '0f8fad5b-d9cb-469f-a165-70867728950e',
+      provider: 'netflix',
     });
   });
 });
@@ -106,5 +110,8 @@ describe('libraryHref', () => {
       '/library?type=tv&list=0f8fad5b-d9cb-469f-a165-70867728950e',
     );
     expect(libraryHref(libraryParamsSchema.parse({}))).toBe('/library');
+    expect(libraryHref(params, { provider: 'prime' })).toBe(
+      '/library?type=tv&q=dark&provider=prime',
+    );
   });
 });

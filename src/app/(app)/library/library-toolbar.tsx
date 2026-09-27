@@ -15,12 +15,16 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { WATCH_PROVIDERS } from '@/lib/catalogs';
 import { SEARCH_FILTER_LABELS } from '@/lib/media-labels';
 import { ENTRY_STATUSES, GENERIC_STATUS_LABELS } from '@/lib/status-labels';
 import { libraryHref, type LibraryParams } from '@/lib/validation/library';
 import { cn } from '@/lib/utils';
 
 const TYPES = ['all', 'movie', 'tv', 'book'] as const;
+
+/** Status and platform share a row on phones; sort and view go on the next one. */
+const HALF_ON_PHONES = 'min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:flex-none sm:basis-auto';
 
 const SORT_LABELS: Record<LibraryParams['sort'], string> = {
   added: 'Aggiunti di recente',
@@ -90,10 +94,7 @@ export function LibraryToolbar({
           value={params.status}
           onValueChange={(status) => navigate({ status: status as LibraryParams['status'] })}
         >
-          <SelectTrigger
-            className="min-w-0 flex-1 sm:w-44 sm:flex-none"
-            aria-label="Filtra per stato"
-          >
+          <SelectTrigger className={cn(HALF_ON_PHONES, 'sm:w-44')} aria-label="Filtra per stato">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -101,6 +102,30 @@ export function LibraryToolbar({
             {ENTRY_STATUSES.map((status) => (
               <SelectItem key={status} value={status}>
                 {GENERIC_STATUS_LABELS[status]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={params.provider || 'all'}
+          onValueChange={(provider) =>
+            navigate({
+              provider: provider === 'all' ? '' : (provider as LibraryParams['provider']),
+            })
+          }
+        >
+          <SelectTrigger
+            className={cn(HALF_ON_PHONES, 'sm:w-48')}
+            aria-label="Filtra per piattaforma"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutte le piattaforme</SelectItem>
+            {WATCH_PROVIDERS.map((provider) => (
+              <SelectItem key={provider.slug} value={provider.slug}>
+                {provider.label}
               </SelectItem>
             ))}
           </SelectContent>

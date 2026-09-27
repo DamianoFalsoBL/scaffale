@@ -194,6 +194,28 @@ describe('filterEntries', () => {
     expect(filterEntries(listed, { ...all, list: '' })).toHaveLength(3);
   });
 
+  it('filters by streaming platform, aliases included', () => {
+    const onNetflix = entry({ item: { id: 'n', mediaType: 'movie' } });
+    const onPrimeWithAds = entry({ item: { id: 'p', mediaType: 'tv' } });
+    const unknown = entry({ item: { id: 'u', mediaType: 'movie' } });
+    const book = entry({ item: { id: 'b', mediaType: 'book' } });
+    const availability = new Map([
+      ['n', [8, 337]],
+      ['p', [2100]],
+    ]);
+    const all = { type: 'all', status: 'all', q: '' } as const;
+    const pick = (provider: 'netflix' | 'prime' | '') =>
+      filterEntries(
+        [onNetflix, onPrimeWithAds, unknown, book],
+        { ...all, provider },
+        availability,
+      ).map((e) => e.item.id);
+
+    expect(pick('netflix')).toEqual(['n']);
+    expect(pick('prime')).toEqual(['p']);
+    expect(pick('')).toEqual(['n', 'p', 'u', 'b']);
+  });
+
   it('searches titles and authors ignoring accents and case', () => {
     expect(filterEntries(entries, { type: 'all', status: 'all', q: 'perche' })).toHaveLength(1);
     expect(filterEntries(entries, { type: 'all', status: 'all', q: 'HERBERT' })).toHaveLength(1);

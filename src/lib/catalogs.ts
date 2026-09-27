@@ -72,20 +72,27 @@ export function genresFor(type: MediaType | 'all' | 'person'): Genre[] {
 
 /**
  * Main streaming services in Italy, with TMDB provider ids verified on
- * /watch/providers/{movie,tv}?watch_region=IT.
+ * /watch/providers/{movie,tv}?watch_region=IT. `aliases`: the same subscription sold
+ * another way (with ads, through an Amazon/Apple channel); used when matching a title's
+ * availability, while Discover filters on the main id.
  */
 export const WATCH_PROVIDERS = [
-  { slug: 'netflix', label: 'Netflix', id: 8 },
-  { slug: 'prime', label: 'Prime Video', id: 119 },
-  { slug: 'disney', label: 'Disney+', id: 337 },
-  { slug: 'apple', label: 'Apple TV', id: 350 },
-  { slug: 'now', label: 'NOW', id: 39 },
-  { slug: 'sky', label: 'Sky Go', id: 29 },
-  { slug: 'paramount', label: 'Paramount+', id: 531 },
-  { slug: 'raiplay', label: 'RaiPlay', id: 222 },
-  { slug: 'infinity', label: 'Mediaset Infinity', id: 359 },
-  { slug: 'timvision', label: 'TIMvision', id: 109 },
-] as const;
+  { slug: 'netflix', label: 'Netflix', id: 8, aliases: [] },
+  { slug: 'prime', label: 'Prime Video', id: 119, aliases: [2100] },
+  { slug: 'disney', label: 'Disney+', id: 337, aliases: [] },
+  { slug: 'apple', label: 'Apple TV', id: 350, aliases: [2243] },
+  { slug: 'now', label: 'NOW', id: 39, aliases: [] },
+  { slug: 'sky', label: 'Sky Go', id: 29, aliases: [] },
+  { slug: 'paramount', label: 'Paramount+', id: 531, aliases: [582, 1853] },
+  { slug: 'raiplay', label: 'RaiPlay', id: 222, aliases: [] },
+  { slug: 'infinity', label: 'Mediaset Infinity', id: 359, aliases: [110] },
+  { slug: 'timvision', label: 'TIMvision', id: 109, aliases: [] },
+] as const satisfies readonly {
+  slug: string;
+  label: string;
+  id: number;
+  aliases: readonly number[];
+}[];
 
 export type WatchProviderSlug = (typeof WATCH_PROVIDERS)[number]['slug'];
 export const WATCH_PROVIDER_SLUGS = WATCH_PROVIDERS.map((p) => p.slug) as [
@@ -95,4 +102,10 @@ export const WATCH_PROVIDER_SLUGS = WATCH_PROVIDERS.map((p) => p.slug) as [
 
 export function findWatchProvider(slug: string | undefined) {
   return WATCH_PROVIDERS.find((provider) => provider.slug === slug);
+}
+
+/** Every TMDB provider id that counts as this service. */
+export function watchProviderIds(slug: WatchProviderSlug): ReadonlySet<number> {
+  const provider = findWatchProvider(slug);
+  return new Set(provider ? [provider.id, ...provider.aliases] : []);
 }

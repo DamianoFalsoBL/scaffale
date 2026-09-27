@@ -168,7 +168,8 @@ export function discoverParams(
 
   const provider = findWatchProvider(filters.provider);
   if (provider) {
-    params.with_watch_providers = String(provider.id);
+    // Any way of getting the same subscription ("|" = or).
+    params.with_watch_providers = [provider.id, ...provider.aliases].join('|');
     params.watch_region = 'IT';
     params.with_watch_monetization_types = 'flatrate|free|ads';
   }

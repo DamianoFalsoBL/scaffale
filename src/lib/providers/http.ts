@@ -114,6 +114,22 @@ export async function fetchJson<T>(url: string, options: FetchJsonOptions<T>): P
 }
 
 /** Keeps the items that match the schema, so one malformed result doesn't sink a whole page. */
+/** Runs `task` on every item, at most `limit` at a time (keeps provider rate limits). */
+export async function forEachLimited<T>(
+  items: readonly T[],
+  limit: number,
+  task: (item: T) => Promise<void>,
+): Promise<void> {
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const item = items[next++] as T;
+      await task(item);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+}
+
 export function parseItems<T>(items: readonly unknown[], schema: z.ZodType<T>): T[] {
   return items.flatMap((item) => {
     const parsed = schema.safeParse(item);

@@ -8,6 +8,7 @@ import { releaseDiscover, type ReleaseBatch, type ReleaseKind } from '@/lib/rele
 import type { SearchFilters } from '@/lib/search-filters';
 
 import { createGoogleBooksProvider } from './google-books';
+import { forEachLimited } from './http';
 import { createOpenLibraryProvider } from './open-library';
 import { searchMedia, type SearchDeps, type SearchFilter } from './search';
 import { createTmdbProvider } from './tmdb';
@@ -102,6 +103,28 @@ export async function getReleases(days: string[], kinds: ReleaseKind[]) {
     });
   }
   return { batches, incomplete: failures.length > 0 };
+}
+
+/**
+ * Streaming platforms (subscription or free, in Italy) of catalog items, keyed by item id.
+ * One cached request per title, 8 at a time; titles whose request failed are left out.
+ */
+export async function getStreamingAvailability(
+  items: { id: string; externalId: string; mediaType: 'movie' | 'tv' }[],
+) {
+  const client = requireTmdb();
+  const available = new Map<string, number[]>();
+  let failed = 0;
+
+  await forEachLimited(items, 8, async (item) => {
+    try {
+      available.set(item.id, await client.getStreamingProviderIds(item.externalId, item.mediaType));
+    } catch (error) {
+      failed++;
+      console.warn('Streaming availability unavailable', { id: item.id, error: String(error) });
+    }
+  });
+  return { available, failed };
 }
 
 export function getPerson(id: number) {

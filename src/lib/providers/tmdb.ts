@@ -454,6 +454,8 @@ const countryProvidersSchema = z.object({
   ads: z.array(z.unknown()).optional(),
 });
 
+const watchProvidersResponseSchema = z.object({ results: z.record(z.string(), z.unknown()) });
+
 export const tmdbRichSchema = z.object({
   credits: movieCreditsSchema,
   aggregate_credits: aggregateCreditsSchema,
@@ -866,6 +868,21 @@ export function createTmdbProvider({
         genreNames(),
       ]);
       return mapTitleExtras(raw, type, genres);
+    },
+
+    /** Platforms streaming a title in Italy with a subscription or for free (ads included). */
+    async getStreamingProviderIds(externalId: string, type: 'movie' | 'tv'): Promise<number[]> {
+      if (!/^\d+$/.test(externalId)) {
+        throw new Error(`Invalid TMDB id: ${externalId}`);
+      }
+      const raw = await request(
+        `/${type}/${externalId}/watch/providers`,
+        {},
+        watchProvidersResponseSchema,
+        DETAILS_REVALIDATE,
+      );
+      const providers = mapWatchProviders(raw);
+      return providers ? [...providers.flatrate, ...providers.free].map((p) => p.id) : [];
     },
 
     /** TMDB Discover: titles by criteria, no text (params from discoverParams). */

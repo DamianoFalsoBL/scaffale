@@ -196,6 +196,30 @@ describe('TMDB bilingual search', () => {
   });
 });
 
+describe('TMDB streaming availability', () => {
+  it('returns Italian subscription and free platforms, not rent or buy', async () => {
+    const fetchImpl = fakeTmdb({
+      '/movie/129/watch/providers': {
+        id: 129,
+        results: {
+          IT: {
+            flatrate: [{ provider_id: 8, provider_name: 'Netflix' }],
+            ads: [{ provider_id: 2100, provider_name: 'Amazon Prime Video with Ads' }],
+            rent: [{ provider_id: 2, provider_name: 'Apple TV Store' }],
+          },
+          US: { flatrate: [{ provider_id: 15, provider_name: 'Hulu' }] },
+        },
+      },
+      '/tv/1/watch/providers': { id: 1, results: {} },
+    });
+    const provider = createTmdbProvider({ accessToken: 'token', fetchImpl });
+
+    await expect(provider.getStreamingProviderIds('129', 'movie')).resolves.toEqual([8, 2100]);
+    await expect(provider.getStreamingProviderIds('1', 'tv')).resolves.toEqual([]);
+    await expect(provider.getStreamingProviderIds('x', 'tv')).rejects.toThrow();
+  });
+});
+
 describe('TMDB details', () => {
   it('maps movie details', () => {
     const media = mapTmdbMovieDetails(tmdbMovieDetailsSchema.parse(movieDetails));

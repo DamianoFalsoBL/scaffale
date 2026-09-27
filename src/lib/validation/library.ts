@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { WATCH_PROVIDER_SLUGS } from '@/lib/catalogs';
 import { Constants } from '@/lib/supabase/database.types';
 
 const { entry_status, media_source, media_type } = Constants.public.Enums;
@@ -56,6 +57,7 @@ export const libraryParamsSchema = z.object({
   view: z.enum(LIBRARY_VIEWS).catch('grid'),
   q: z.string().trim().max(100).catch(''),
   list: z.uuid().catch(''),
+  provider: z.enum(['', ...WATCH_PROVIDER_SLUGS]).catch(''),
 });
 
 const listName = z
@@ -92,6 +94,7 @@ export const LIBRARY_DEFAULTS: LibraryParams = {
   view: 'grid',
   q: '',
   list: '',
+  provider: '',
 };
 
 /** /library URL with only the non-default values. */
