@@ -117,16 +117,16 @@ function CompletedByYear({ rows }: { rows: DashboardData['completedByYear'] }) {
 
 function summary({
   inProgress,
-  onHold,
+  waiting,
   planned,
 }: {
   inProgress: number;
-  onHold: number;
+  waiting: number;
   planned: number;
 }) {
   const parts = [
     inProgress > 0 && `${inProgress} ${inProgress === 1 ? 'titolo' : 'titoli'} in corso`,
-    onHold > 0 && `${onHold} in pausa`,
+    waiting > 0 && `${waiting} serie in attesa`,
     planned > 0 && `${planned} da recuperare`,
   ].filter((part): part is string => !!part);
   if (parts.length === 0) return 'Cosa guardi o leggi oggi?';
@@ -199,13 +199,13 @@ export default async function DashboardPage() {
         large
         empty="Niente in corso. Metti una serie o un libro “In corso” per ritrovarlo qui."
       />
-      {/* Paused titles get their own shelf only when there are some. */}
-      {dashboard.onHold.length > 0 && (
+      {/* Series waiting for a new season get their own shelf only when there are some. */}
+      {dashboard.waiting.length > 0 && (
         <Section
-          title="In pausa"
-          href="/library?status=on_hold"
-          entries={dashboard.onHold}
-          total={counts.onHold}
+          title="In attesa"
+          href="/library?status=waiting"
+          entries={dashboard.waiting}
+          total={counts.waiting}
           empty=""
         />
       )}

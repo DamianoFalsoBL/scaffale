@@ -249,9 +249,9 @@ export type Database = {
       entry_status:
         | "planned"
         | "in_progress"
+        | "waiting"
         | "completed"
         | "dropped"
-        | "on_hold"
       media_source: "tmdb" | "google_books" | "open_library"
       media_type: "movie" | "tv" | "book"
     }
@@ -387,9 +387,9 @@ export const Constants = {
       entry_status: [
         "planned",
         "in_progress",
+        "waiting",
         "completed",
         "dropped",
-        "on_hold",
       ],
       media_source: ["tmdb", "google_books", "open_library"],
       media_type: ["movie", "tv", "book"],

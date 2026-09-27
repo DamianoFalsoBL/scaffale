@@ -16,6 +16,7 @@ const dateFormat = new Intl.DateTimeFormat('it-IT', { dateStyle: 'medium' });
 const STATUS_TOASTS: Partial<Record<EntryStatus, string>> = {
   in_progress: 'Serie spostata in “In corso”',
   completed: 'Serie completata: le hai viste tutte',
+  waiting: 'Sei in pari: serie spostata in “In attesa” della prossima stagione',
 };
 
 function seasonDetail(season: SeasonInfo) {

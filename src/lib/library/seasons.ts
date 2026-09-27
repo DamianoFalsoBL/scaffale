@@ -1,6 +1,8 @@
+import { formatDate } from '@/lib/format';
 import type { EntryStatus } from '@/lib/status-labels';
 
-import type { TvExtra } from './extra';
+import { parseExtra, type TvExtra } from './extra';
+import type { LibraryEntry } from './model';
 
 export interface SeasonInfo {
   number: number;
@@ -71,9 +73,10 @@ export function seasonsUpTo(summary: SeasonSummary, upTo: number) {
 
 /**
  * Status after marking seasons as seen (never after removing them):
- * - the first seasons move a planned, paused or dropped series to "in progress";
- * - every aired season seen completes it, but only if the series has ended; a running
- *   series stays "in progress", waiting for the next season.
+ * - every aired season seen completes a series that has ended, and puts a running one
+ *   "waiting" for its next season;
+ * - otherwise the first seasons move a planned, waiting or dropped series to "in progress";
+ * - a series the user completed stays completed.
  */
 export function statusAfterWatching(
   current: EntryStatus,
@@ -81,15 +84,31 @@ export function statusAfterWatching(
   tvStatus: string | undefined,
 ): EntryStatus {
   if (summary.allWatched && isSeriesFinished(tvStatus)) return 'completed';
-  if (summary.watched > 0 && current !== 'completed') return 'in_progress';
+  if (current === 'completed') return current;
+  if (summary.allWatched) return 'waiting';
+  if (summary.watched > 0) return 'in_progress';
   return current;
 }
 
+/** What a waiting series is waiting for: a season out, announced, or nothing known yet. */
+export function waitingNote(summary: SeasonSummary) {
+  if (summary.next !== null) return `Stagione ${summary.next} disponibile`;
+  const announced = summary.seasons.find((season) => !season.aired);
+  if (announced) {
+    const date = formatDate(announced.airDate);
+    return date
+      ? `Stagione ${announced.number} dal ${date}`
+      : `Stagione ${announced.number} annunciata`;
+  }
+  return 'In attesa di una nuova stagione';
+}
+
 /**
- * One-line note for library cards: where the user is ("Stagione 3 di 5"), or a new
- * season out for a series they had finished.
+ * One-line note for library cards: where the user is ("Stagione 3 di 5"), what a waiting
+ * series waits for, or a new season out for a series they had finished.
  */
 export function seasonNote(status: EntryStatus, summary: SeasonSummary): string | undefined {
+  if (status === 'waiting') return waitingNote(summary);
   if (summary.total === 0) return undefined;
   if (status === 'completed') {
     return summary.watched > 0 && summary.next !== null ? 'Nuova stagione' : undefined;
@@ -98,4 +117,14 @@ export function seasonNote(status: EntryStatus, summary: SeasonSummary): string 
     return `Stagione ${summary.next} di ${summary.total}`;
   }
   return undefined;
+}
+
+/** A series in the library with an aired season the user hasn't marked as seen. */
+export function hasNewSeason(entry: LibraryEntry, today: string) {
+  if (entry.item.mediaType !== 'tv') return false;
+  const parsed = parseExtra('tv', entry.item.extra);
+  return (
+    parsed.mediaType === 'tv' &&
+    summarizeSeasons(parsed.extra, entry.watchedSeasons, today).next !== null
+  );
 }

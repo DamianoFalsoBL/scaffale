@@ -268,7 +268,7 @@ describe('buildDashboard', () => {
       entry({ status: 'completed', finishedAt: '2026-04-01', item: { mediaType: 'book' } }),
       entry({ status: 'in_progress', item: { mediaType: 'tv' } }),
       entry({ status: 'planned' }),
-      entry({ status: 'on_hold', item: { mediaType: 'tv' } }),
+      entry({ status: 'waiting', item: { mediaType: 'tv' } }),
     ];
 
     const dashboard = buildDashboard(entries);
@@ -281,14 +281,38 @@ describe('buildDashboard', () => {
     expect(dashboard.recentlyCompleted[0]?.finishedAt).toBe('2026-04-01');
     expect(dashboard.inProgress).toHaveLength(1);
     expect(dashboard.planned).toHaveLength(1);
-    expect(dashboard.onHold).toHaveLength(1);
+    expect(dashboard.waiting).toHaveLength(1);
     expect(dashboard.totals).toEqual({
       all: 6,
       completed: 3,
       inProgress: 1,
-      onHold: 1,
+      waiting: 1,
       planned: 1,
     });
+  });
+});
+
+describe('buildDashboard waiting shelf', () => {
+  it('puts series with a new season out first', () => {
+    const seasons = [
+      { seasonNumber: 1, episodeCount: 8, name: 'S1', airDate: '2020-01-01' },
+      { seasonNumber: 2, episodeCount: 8, name: 'S2', airDate: '2026-08-04' },
+    ];
+    const caughtUp = entry({
+      status: 'waiting',
+      watchedSeasons: [1, 2],
+      updatedAt: '2026-09-20T00:00:00Z',
+      item: { mediaType: 'tv', extra: { seasons } },
+    });
+    const newSeason = entry({
+      status: 'waiting',
+      watchedSeasons: [1],
+      updatedAt: '2026-01-01T00:00:00Z',
+      item: { mediaType: 'tv', extra: { seasons } },
+    });
+
+    const { waiting } = buildDashboard([caughtUp, newSeason], { today: '2026-09-27' });
+    expect(waiting.map((e) => e.id)).toEqual([newSeason.id, caughtUp.id]);
   });
 });
 

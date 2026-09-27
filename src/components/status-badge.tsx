@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 export const STATUS_DOT: Record<EntryStatus, string> = {
   planned: 'bg-sky-500',
   in_progress: 'bg-amber-500',
-  on_hold: 'bg-zinc-400',
+  waiting: 'bg-violet-400',
   completed: 'bg-emerald-500',
   dropped: 'bg-rose-500',
 };

@@ -127,7 +127,8 @@ export function applyStatusDefaults(
 ): EntryProgress {
   const result = { ...next };
 
-  if (result.status === 'in_progress' && !result.startedAt) {
+  // A series waiting for its next season has been started too.
+  if ((result.status === 'in_progress' || result.status === 'waiting') && !result.startedAt) {
     result.startedAt = today;
   }
 

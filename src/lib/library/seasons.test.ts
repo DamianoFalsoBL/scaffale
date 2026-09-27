@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { seasonNote, seasonsUpTo, statusAfterWatching, summarizeSeasons } from './seasons';
+import type { LibraryEntry } from './model';
+import {
+  hasNewSeason,
+  seasonNote,
+  seasonsUpTo,
+  statusAfterWatching,
+  summarizeSeasons,
+  waitingNote,
+} from './seasons';
 
 const today = '2026-09-26';
 const extra = {
@@ -42,8 +50,8 @@ describe('summarizeSeasons', () => {
 });
 
 describe('statusAfterWatching', () => {
-  it('starts a planned, paused or dropped series', () => {
-    for (const status of ['planned', 'on_hold', 'dropped'] as const) {
+  it('starts a planned, waiting or dropped series', () => {
+    for (const status of ['planned', 'waiting', 'dropped'] as const) {
       expect(statusAfterWatching(status, { watched: 1, allWatched: false }, 'Ended')).toBe(
         'in_progress',
       );
@@ -59,8 +67,11 @@ describe('statusAfterWatching', () => {
     );
     // Still running: waits for the next season.
     expect(
-      statusAfterWatching('planned', { watched: 2, allWatched: true }, 'Returning Series'),
-    ).toBe('in_progress');
+      statusAfterWatching('in_progress', { watched: 2, allWatched: true }, 'Returning Series'),
+    ).toBe('waiting');
+    expect(statusAfterWatching('planned', { watched: 2, allWatched: true }, undefined)).toBe(
+      'waiting',
+    );
   });
 
   it('keeps a completed series completed', () => {
@@ -76,5 +87,29 @@ describe('seasonNote', () => {
     expect(seasonNote('completed', summarizeSeasons(extra, [1], today))).toBe('Nuova stagione');
     expect(seasonNote('completed', summarizeSeasons(extra, [1, 2], today))).toBeUndefined();
     expect(seasonNote('planned', summarizeSeasons(extra, [], today))).toBeUndefined();
+  });
+
+  it('says what a waiting series waits for', () => {
+    expect(seasonNote('waiting', summarizeSeasons(extra, [1], today))).toBe(
+      'Stagione 2 disponibile',
+    );
+    expect(waitingNote(summarizeSeasons(extra, [1, 2], today))).toBe('Stagione 3 dal 15 gen 2027');
+    const undated = { seasons: extra.seasons.filter((s) => s.seasonNumber !== 3) };
+    expect(waitingNote(summarizeSeasons(undated, [1, 2], today))).toBe('Stagione 4 annunciata');
+    const nothingNew = { seasons: extra.seasons.filter((s) => s.seasonNumber <= 2) };
+    expect(waitingNote(summarizeSeasons(nothingNew, [1, 2], today))).toBe(
+      'In attesa di una nuova stagione',
+    );
+  });
+});
+
+describe('hasNewSeason', () => {
+  const series = (watchedSeasons: number[], mediaType: 'tv' | 'movie' = 'tv') =>
+    ({ watchedSeasons, item: { mediaType, extra } }) as unknown as LibraryEntry;
+
+  it('is true when an aired season is not seen yet', () => {
+    expect(hasNewSeason(series([1]), today)).toBe(true);
+    expect(hasNewSeason(series([1, 2]), today)).toBe(false);
+    expect(hasNewSeason(series([], 'movie'), today)).toBe(false);
   });
 });

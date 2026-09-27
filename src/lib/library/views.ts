@@ -2,7 +2,8 @@ import { watchProviderIds, type WatchProviderSlug } from '@/lib/catalogs';
 import type { MediaType } from '@/lib/providers/types';
 import type { EntryStatus } from '@/lib/status-labels';
 
-import type { LibraryEntry } from './model';
+import { todayIso, type LibraryEntry } from './model';
+import { hasNewSeason } from './seasons';
 
 export type LibrarySort = 'added' | 'title' | 'rating' | 'year';
 
@@ -90,17 +91,21 @@ export function sortEntries(entries: readonly LibraryEntry[], sort: LibrarySort)
 
 export interface DashboardData {
   inProgress: LibraryEntry[];
-  onHold: LibraryEntry[];
+  /** Series waiting for a new season; those with one already out first. */
+  waiting: LibraryEntry[];
   planned: LibraryEntry[];
   recentlyCompleted: LibraryEntry[];
   completedByType: Record<MediaType, number>;
   completedByYear: { year: number; movie: number; tv: number; book: number; total: number }[];
-  totals: { all: number; completed: number; inProgress: number; onHold: number; planned: number };
+  totals: { all: number; completed: number; inProgress: number; waiting: number; planned: number };
 }
 
 const completionDate = (entry: LibraryEntry) => entry.finishedAt ?? entry.updatedAt.slice(0, 10);
 
-export function buildDashboard(entries: readonly LibraryEntry[], limit = 12): DashboardData {
+export function buildDashboard(
+  entries: readonly LibraryEntry[],
+  { limit = 12, today = todayIso() }: { limit?: number; today?: string } = {},
+): DashboardData {
   const completed = entries.filter((entry) => entry.status === 'completed');
   const completedByType: Record<MediaType, number> = { movie: 0, tv: 0, book: 0 };
   const byYear = new Map<number, DashboardData['completedByYear'][number]>();
@@ -119,12 +124,18 @@ export function buildDashboard(entries: readonly LibraryEntry[], limit = 12): Da
   const recentlyTouched = (list: LibraryEntry[]) =>
     list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, limit);
   const inProgress = byStatus('in_progress');
-  const onHold = byStatus('on_hold');
+  const waiting = byStatus('waiting');
   const planned = byStatus('planned');
 
   return {
     inProgress: recentlyTouched(inProgress),
-    onHold: recentlyTouched(onHold),
+    waiting: [...waiting]
+      .sort(
+        (a, b) =>
+          Number(hasNewSeason(b, today)) - Number(hasNewSeason(a, today)) ||
+          b.updatedAt.localeCompare(a.updatedAt),
+      )
+      .slice(0, limit),
     planned: [...planned].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit),
     recentlyCompleted: [...completed]
       .sort((a, b) => completionDate(b).localeCompare(completionDate(a)))
@@ -135,7 +146,7 @@ export function buildDashboard(entries: readonly LibraryEntry[], limit = 12): Da
       all: entries.length,
       completed: completed.length,
       inProgress: inProgress.length,
-      onHold: onHold.length,
+      waiting: waiting.length,
       planned: planned.length,
     },
   };

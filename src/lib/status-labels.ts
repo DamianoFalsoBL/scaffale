@@ -7,7 +7,7 @@ export type EntryStatus = Enums<'entry_status'>;
 export const ENTRY_STATUSES = [
   'planned',
   'in_progress',
-  'on_hold',
+  'waiting',
   'completed',
   'dropped',
 ] as const satisfies readonly EntryStatus[];
@@ -18,14 +18,14 @@ const LABELS: Record<MediaType, Partial<Record<EntryStatus, string>>> = {
   tv: {
     planned: 'Da vedere',
     in_progress: 'In corso',
-    on_hold: 'In pausa',
+    // All aired seasons seen, a new one out or on its way.
+    waiting: 'In attesa',
     completed: 'Completata',
     dropped: 'Abbandonata',
   },
   book: {
     planned: 'Da leggere',
     in_progress: 'In lettura',
-    on_hold: 'In pausa',
     completed: 'Letto',
     dropped: 'Abbandonato',
   },
@@ -35,7 +35,7 @@ const LABELS: Record<MediaType, Partial<Record<EntryStatus, string>>> = {
 export const GENERIC_STATUS_LABELS: Record<EntryStatus, string> = {
   planned: 'Da vedere/leggere',
   in_progress: 'In corso',
-  on_hold: 'In pausa',
+  waiting: 'In attesa',
   completed: 'Completati',
   dropped: 'Abbandonati',
 };
