@@ -178,11 +178,12 @@ export default async function DashboardPage() {
               key={type}
               className="flex flex-col gap-1 rounded-md bg-card p-3 shadow-xs ring-1 ring-foreground/10 sm:p-4"
             >
-              <dt className="flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
-                <Icon className={`size-4 shrink-0 ${color}`} aria-hidden />
+              {/* A label may wrap on phones: icon on its first line, number pinned to the bottom. */}
+              <dt className="flex items-start gap-1.5 text-xs text-muted-foreground sm:text-sm">
+                <Icon className={`size-4 shrink-0 sm:mt-0.5 ${color}`} aria-hidden />
                 {label}
               </dt>
-              <dd className="font-heading text-3xl font-semibold tabular-nums sm:text-4xl">
+              <dd className="mt-auto font-heading text-3xl font-semibold tabular-nums sm:text-4xl">
                 {dashboard.completedByType[type]}
               </dd>
             </div>
