@@ -12,7 +12,9 @@ import {
   createTmdbProvider,
   mapTmdbMovieDetails,
   mapTmdbTvDetails,
+  mergeRankings,
   tmdbMovieDetailsSchema,
+  type TmdbSearchItem,
   tmdbTvDetailsSchema,
   tmdbPosterUrl,
 } from './tmdb';
@@ -88,6 +90,109 @@ describe('TMDB search', () => {
 
     await expect(provider.search('dune', { type: 'book' })).resolves.toMatchObject({ results: [] });
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+const movie = (id: number, title: string, votes = 0): TmdbSearchItem => ({
+  media_type: 'movie',
+  id,
+  title,
+  vote_count: votes,
+});
+
+describe('mergeRankings', () => {
+  it('gives each title its best position of the two languages', () => {
+    const merged = mergeRankings(
+      [
+        movie(1, 'Uncovering Spirited Away', 10),
+        movie(2, 'Altro', 5),
+        movie(3, 'La città incantata', 17000),
+      ],
+      [movie(3, 'Spirited Away', 17000), movie(1, 'Uncovering Spirited Away', 10)],
+    );
+    expect(merged.map(({ item }) => item.id)).toEqual([3, 1, 2]);
+    // Italian data wins for titles both searches returned.
+    expect(merged[0]).toEqual({
+      item: expect.objectContaining({ title: 'La città incantata' }),
+      english: false,
+    });
+  });
+
+  it('marks titles only the English search found', () => {
+    const merged = mergeRankings(
+      [movie(1, 'Omicidio nell’ombra', 20)],
+      [movie(9, 'Memories of Murder', 4000)],
+    );
+    expect(merged).toEqual([
+      { item: expect.objectContaining({ id: 9 }), english: true },
+      { item: expect.objectContaining({ id: 1 }), english: false },
+    ]);
+  });
+
+  it('keeps movies and series with the same id apart', () => {
+    const series: TmdbSearchItem = { media_type: 'tv', id: 1, name: 'Serie' };
+    expect(mergeRankings([movie(1, 'Film')], [series])).toHaveLength(2);
+  });
+});
+
+describe('TMDB bilingual search', () => {
+  const italianPage = {
+    page: 1,
+    total_pages: 1,
+    results: [
+      { id: 1, title: 'Omicidio nell’ombra', original_title: 'Memories of Murder', vote_count: 20 },
+    ],
+  };
+  const englishPage = {
+    page: 1,
+    total_pages: 1,
+    results: [
+      {
+        id: 11423,
+        title: 'Memories of Murder',
+        original_title: '살인의 추억',
+        overview: 'EN',
+        vote_count: 4000,
+      },
+      { id: 1, title: 'Memories of Murder', original_title: 'Memories of Murder', vote_count: 20 },
+    ],
+  };
+
+  function fetchFor(localized: unknown) {
+    return vi.fn<FetchLike>(async (input) => {
+      const url = new URL(input);
+      const path = url.pathname.replace('/3', '');
+      if (path === '/search/movie') {
+        return json(url.searchParams.get('language') === 'en-US' ? englishPage : italianPage);
+      }
+      if (path === '/movie/11423' && localized) return json(localized);
+      if (path in genreRoutes) return json(genreRoutes[path as keyof typeof genreRoutes]);
+      return new Response(null, { status: 404 });
+    });
+  }
+
+  it('finds a title by its English name and shows it in Italian', async () => {
+    const fetchImpl = fetchFor({
+      title: 'Memorie di un assassino',
+      overview: 'IT',
+      poster_path: '/it.jpg',
+    });
+    const provider = createTmdbProvider({ accessToken: 'token', fetchImpl });
+
+    const page = await provider.search('memories of murder', { type: 'movie' });
+
+    expect(page.results.map((m) => [m.externalId, m.title])).toEqual([
+      ['11423', 'Memorie di un assassino'],
+      ['1', 'Omicidio nell’ombra'],
+    ]);
+    expect(page.results[0]).toMatchObject({ originalTitle: '살인의 추억', overview: 'IT' });
+    expect(page.results[0]?.posterUrl).toMatch(/\/it\.jpg$/);
+  });
+
+  it('keeps the English data when the Italian one is missing', async () => {
+    const provider = createTmdbProvider({ accessToken: 'token', fetchImpl: fetchFor(null) });
+    const page = await provider.search('memories of murder', { type: 'movie' });
+    expect(page.results[0]).toMatchObject({ title: 'Memories of Murder', overview: 'EN' });
   });
 });
 

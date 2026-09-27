@@ -116,7 +116,8 @@ function readSearchParams(params: URLSearchParams) {
   };
 }
 
-const mediaKey = (media: SearchResultWithLibrary) => `${media.source}:${media.externalId}`;
+const mediaKey = (media: SearchResultWithLibrary) =>
+  `${media.source}:${media.mediaType}:${media.externalId}`;
 
 function appendUnique(current: SearchResultWithLibrary[], next: SearchResultWithLibrary[]) {
   const seen = new Set(current.map(mediaKey));

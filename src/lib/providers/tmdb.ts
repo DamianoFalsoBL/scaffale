@@ -12,6 +12,8 @@ import {
 const API_BASE = 'https://api.themoviedb.org/3';
 const IMAGE_BASE = 'https://image.tmdb.org/t/p';
 const LANGUAGE = 'it-IT';
+/** Second ranking for searches typed with the English title. */
+const SECOND_LANGUAGE = 'en-US';
 const REGION = 'IT';
 
 const SEARCH_REVALIDATE = 600;
@@ -58,6 +60,14 @@ const multiResultSchema = z.discriminatedUnion('media_type', [
   tmdbMovieResultSchema.extend({ media_type: z.literal('movie') }),
   tmdbTvResultSchema.extend({ media_type: z.literal('tv') }),
 ]);
+
+/** Italian title, overview and poster of a title found only by the English search. */
+const localizedSchema = z.object({
+  title: optionalText,
+  name: optionalText,
+  overview: optionalText,
+  poster_path: posterPath,
+});
 
 const searchResponseSchema = z.object({
   page: z.number().int(),
@@ -236,6 +246,75 @@ export function mapTmdbTvResult(item: TmdbTvResult, genreNames: GenreNames): Nor
     rating: ratingOf(item),
     extra: {},
   };
+}
+
+export type TmdbSearchItem =
+  (TmdbMovieResult & { media_type: 'movie' }) | (TmdbTvResult & { media_type: 'tv' });
+
+export function mapTmdbSearchItem(item: TmdbSearchItem, genreNames: GenreNames): NormalizedMedia {
+  return item.media_type === 'movie'
+    ? mapTmdbMovieResult(item, genreNames)
+    : mapTmdbTvResult(item, genreNames);
+}
+
+function parseSearchItems(results: unknown[], type: MediaType | undefined): TmdbSearchItem[] {
+  if (type === 'movie') {
+    return parseItems(results, tmdbMovieResultSchema).map((item) => ({
+      ...item,
+      media_type: 'movie' as const,
+    }));
+  }
+  if (type === 'tv') {
+    return parseItems(results, tmdbTvResultSchema).map((item) => ({
+      ...item,
+      media_type: 'tv' as const,
+    }));
+  }
+  // People (media_type "person") fail the union and are dropped here.
+  return parseItems(results, multiResultSchema);
+}
+
+/**
+ * Merges the Italian and English rankings of the same search. TMDB matches the query
+ * against every title of a work, but ranks by how close the *displayed* title is: an
+ * English title typed in the Italian search ("spirited away") sinks below minor titles
+ * that happen to share its words. Each title takes its best position of the two; at the
+ * same position the one with more votes wins, then the Italian ranking.
+ * `english` marks titles only the English page returned (their data is in English).
+ */
+export function mergeRankings(
+  italian: readonly TmdbSearchItem[],
+  english: readonly TmdbSearchItem[],
+): { item: TmdbSearchItem; english: boolean }[] {
+  const key = (item: TmdbSearchItem) => `${item.media_type}:${item.id}`;
+  const englishRank = new Map(english.map((item, i) => [key(item), i]));
+  const merged = new Map<
+    string,
+    { item: TmdbSearchItem; english: boolean; rank: number; italianRank: number }
+  >();
+
+  italian.forEach((item, i) => {
+    if (merged.has(key(item))) return;
+    merged.set(key(item), {
+      item,
+      english: false,
+      rank: Math.min(i, englishRank.get(key(item)) ?? Infinity),
+      italianRank: i,
+    });
+  });
+  english.forEach((item, i) => {
+    if (merged.has(key(item))) return;
+    merged.set(key(item), { item, english: true, rank: i, italianRank: Infinity });
+  });
+
+  return [...merged.values()]
+    .sort(
+      (a, b) =>
+        a.rank - b.rank ||
+        (b.item.vote_count ?? 0) - (a.item.vote_count ?? 0) ||
+        a.italianRank - b.italianRank,
+    )
+    .map(({ item, english: fromEnglish }) => ({ item, english: fromEnglish }));
 }
 
 /** Italian overview, or the English one when TMDB has no Italian translation. */
@@ -663,8 +742,9 @@ export function createTmdbProvider({
     type: MediaType | undefined,
     page: number,
     year: number | undefined,
+    language: string,
   ) {
-    const params = { query, page: String(page), include_adult: 'false' };
+    const params = { query, page: String(page), include_adult: 'false', language };
     // Exact year only: ranges are filtered by the caller.
     const yearParam = (key: string): Record<string, string> =>
       year !== undefined ? { [key]: String(year) } : {};
@@ -688,36 +768,52 @@ export function createTmdbProvider({
     return request('/search/multi', params, searchResponseSchema, SEARCH_REVALIDATE);
   }
 
+  /** Italian title, overview and poster for a result of the English search (kept if missing). */
+  async function localize(item: TmdbSearchItem): Promise<TmdbSearchItem> {
+    try {
+      const it = await request(
+        `/${item.media_type}/${item.id}`,
+        {},
+        localizedSchema,
+        DETAILS_REVALIDATE,
+      );
+      const overview = nonEmpty(it.overview) ?? item.overview;
+      const poster_path = it.poster_path ?? item.poster_path;
+      return item.media_type === 'movie'
+        ? { ...item, title: nonEmpty(it.title) ?? item.title, overview, poster_path }
+        : { ...item, name: nonEmpty(it.name) ?? item.name, overview, poster_path };
+    } catch {
+      return item;
+    }
+  }
+
   const provider = {
     async search(query, { type, page = 1, year } = {}): Promise<SearchPage> {
       if (type === 'book') {
         return EMPTY_PAGE(page);
       }
 
-      const [data, genres] = await Promise.all([
-        searchEndpoint(query, type, page, year),
+      // Same search in Italian and English: see mergeRankings. The English one is a bonus.
+      const [italian, english, genres] = await Promise.all([
+        searchEndpoint(query, type, page, year, LANGUAGE),
+        searchEndpoint(query, type, page, year, SECOND_LANGUAGE).catch(() => null),
         genreNames(),
       ]);
 
-      let results: NormalizedMedia[];
-      if (type === 'movie') {
-        results = parseItems(data.results, tmdbMovieResultSchema).map((item) =>
-          mapTmdbMovieResult(item, genres),
-        );
-      } else if (type === 'tv') {
-        results = parseItems(data.results, tmdbTvResultSchema).map((item) =>
-          mapTmdbTvResult(item, genres),
-        );
-      } else {
-        // People (media_type "person") fail the union and are dropped here.
-        results = parseItems(data.results, multiResultSchema).map((item) =>
-          item.media_type === 'movie'
-            ? mapTmdbMovieResult(item, genres)
-            : mapTmdbTvResult(item, genres),
-        );
-      }
+      const merged = mergeRankings(
+        parseSearchItems(italian.results, type),
+        english ? parseSearchItems(english.results, type) : [],
+      );
+      const items = await Promise.all(
+        merged.map(({ item, english: fromEnglish }) => (fromEnglish ? localize(item) : item)),
+      );
 
-      return { results, page, hasMore: data.page < data.total_pages };
+      return {
+        results: items.map((item) => mapTmdbSearchItem(item, genres)),
+        page,
+        hasMore:
+          italian.page < italian.total_pages || (!!english && english.page < english.total_pages),
+      };
     },
 
     async getDetails(externalId, type) {
