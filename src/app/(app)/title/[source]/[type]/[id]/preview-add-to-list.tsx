@@ -36,7 +36,8 @@ export function PreviewAddToList({
         return;
       }
       toast.success(`Aggiunto a “${list.name}” e alla libreria`);
-      router.push(`/item/${result.data.mediaItemId}`);
+      // Replace the preview: it now redirects to the detail (see AddToLibrary).
+      router.replace(`/item/${result.data.mediaItemId}`);
     });
   }
 

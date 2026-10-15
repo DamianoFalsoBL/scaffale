@@ -68,7 +68,9 @@ export function AddToLibrary({
 
       if (result.ok) {
         setSaved(result.data);
-        if (openOnAdd) router.push(`/item/${result.data.mediaItemId}`);
+        // Replace the preview in the history: once saved it only redirects to the detail,
+        // so going back would land on the same page.
+        if (openOnAdd) router.replace(`/item/${result.data.mediaItemId}`);
         toast.success(`“${media.title}” aggiunto alla libreria`, {
           description: statusLabel(media.mediaType, result.data.status),
         });
