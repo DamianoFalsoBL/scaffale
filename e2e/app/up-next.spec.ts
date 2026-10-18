@@ -60,6 +60,8 @@ test('takes it out from the card menu, and seeing it clears the mark', async ({ 
 
   await menu.click();
   await page.getByRole('menuitemradio', { name: 'Visto' }).click();
+  // Saved once it leaves the planned list (leaving earlier would cancel the save).
+  await expect(menu).toHaveCount(0);
   await page.goto('/dashboard');
   await expect(page.getByRole('region', { name: 'Prossimi' })).toHaveCount(0);
 });
