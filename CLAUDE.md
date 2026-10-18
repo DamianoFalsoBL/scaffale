@@ -10,6 +10,7 @@ Full spec: [docs/spec.md](docs/spec.md). Decisions that override the spec are li
 - Never invent APIs: check official docs (bundled Next.js docs in `node_modules/next/dist/docs/`, Supabase, TMDB, Google Books, Open Library). State doubts explicitly.
 - End of each phase: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm format:check` must pass; update `README.md` and `.env.example`; conventional commit. Before merging to main also run `pnpm test:e2e` (Playwright, test account from `pnpm e2e:user`; never read or print `E2E_PASSWORD`).
 - Languages: code, identifiers, DB objects and commits in English; UI copy in Italian.
+- Releases (semver, see README "Versioni"): on the feature branch, bump `version` in `package.json` (feat → minor, fix → patch; several changes released together → one bump) so the preview already shows it. After the fast-forward merge to main, tag main's HEAD with an annotated tag `vX.Y.Z` (short summary as message) and push it (`git push origin vX.Y.Z`). Tests-only or docs-only changes don't get a release.
 
 ## Decisions (override the spec)
 

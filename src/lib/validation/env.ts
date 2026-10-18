@@ -18,6 +18,9 @@ export const serverEnvSchema = z.object({
   TMDB_READ_ACCESS_TOKEN: optional(z.string().min(1)),
   GOOGLE_BOOKS_API_KEY: optional(z.string().min(1)),
   CRON_SECRET: optional(z.string().min(16)),
+  // Set by Vercel on every deployment (system environment variables).
+  VERCEL_ENV: optional(z.enum(['production', 'preview', 'development'])),
+  VERCEL_GIT_COMMIT_SHA: optional(z.string().min(7)),
   ALLOWED_EMAILS: z
     .string()
     .optional()

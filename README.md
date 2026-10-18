@@ -237,6 +237,12 @@ Su alcune reti le connessioni **IPv6** verso CloudFront (la CDN di TMDB) vengono
 - **Supabase Auth:** `site_url` è il dominio di produzione; i redirect ammessi sono produzione, `scaffale-rho.vercel.app`, le anteprime `scaffale-*-damianofalsobls-projects.vercel.app` e `localhost:3000` (`supabase/config.toml`, applicati con `config diff` + `config push`).
 - `DNS_IPV4_FIRST` su Vercel non serve.
 
+### Versioni
+
+Numerazione [semver](https://semver.org/lang/it/) in `package.json`, con un tag git `vX.Y.Z` per ogni rilascio in produzione: una novità alza il secondo numero (`1.13.0` → `1.14.0`), una correzione il terzo (`1.14.0` → `1.14.1`). `v1.0.0` è la fine della fase 4 (sito online); i tag fino a `v1.13.0` sono stati ricostruiti dallo storico. `git tag --sort=v:refname` elenca le versioni, `git log v1.12.0..v1.13.0` mostra cosa è cambiato tra due.
+
+In fondo al **Profilo** l'app mostra la versione in uso, il commit e, fuori dalla produzione, se è un'anteprima o una build locale (es. "Versione 1.14.0 · 8180b7d"). Il commit e l'ambiente vengono dalle variabili di sistema di Vercel `VERCEL_GIT_COMMIT_SHA` e `VERCEL_ENV` (`src/lib/build-info.ts`).
+
 ## Job pianificati (Vercel Cron)
 
 Definiti in [vercel.json](vercel.json). Sul piano Hobby girano al massimo una volta al giorno, con una tolleranza di un'ora sull'orario. Entrambe le route rispondono 401 senza `Authorization: Bearer <CRON_SECRET>`; Vercel manda l'header da solo.

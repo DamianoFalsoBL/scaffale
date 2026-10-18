@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
+import packageJson from '../../../../package.json';
+
 import { getCurrentUser } from '@/lib/auth/session';
+import { buildInfo, formatBuildInfo } from '@/lib/build-info';
+import { serverEnv } from '@/lib/env.server';
 import { getUserSettings } from '@/lib/library/queries';
 import { createClient } from '@/lib/supabase/server';
 
@@ -84,6 +88,17 @@ export default async function ProfilePage() {
         </h2>
         <InstallHelp />
       </section>
+
+      {/* Which build is running: useful when reporting a problem from the installed app. */}
+      <p className="border-t pt-4 text-xs text-muted-foreground">
+        {formatBuildInfo(
+          buildInfo({
+            version: packageJson.version,
+            vercelEnv: serverEnv.VERCEL_ENV,
+            commitSha: serverEnv.VERCEL_GIT_COMMIT_SHA,
+          }),
+        )}
+      </p>
     </div>
   );
 }
