@@ -18,7 +18,7 @@ export function testAccount() {
   return { email, password };
 }
 
-/** Deletes the test account's library and lists (seasons and list items cascade). */
+/** Deletes the test account's library, lists and settings (seasons and list items cascade). */
 export async function resetTestAccount() {
   const { email } = testAccount();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,7 +32,7 @@ export async function resetTestAccount() {
   const user = data.users.find((candidate) => candidate.email?.toLowerCase() === email);
   if (!user) throw new Error(`Test account ${email} not found: run \`pnpm e2e:user\`.`);
 
-  for (const table of ['lists', 'user_entries'] as const) {
+  for (const table of ['lists', 'user_entries', 'user_settings'] as const) {
     const { error: deleteError } = await admin.from(table).delete().eq('user_id', user.id);
     if (deleteError) throw deleteError;
   }

@@ -36,6 +36,7 @@ function series(
     updatedAt: '2026-01-01T00:00:00Z',
     watchedSeasons: [],
     listIds: [],
+    upNextAt: null,
     item: {
       id: `m${id}`,
       mediaType: 'tv',

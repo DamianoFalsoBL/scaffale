@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { addEntrySchema, libraryHref, libraryParamsSchema, updateEntrySchema } from './library';
+import {
+  addEntrySchema,
+  libraryHref,
+  libraryParamsSchema,
+  streamingProvidersSchema,
+  updateEntrySchema,
+  upNextSchema,
+} from './library';
 
 const entryId = '0b9f8f64-3c2f-4a36-9d51-8a8e3b0f6c11';
 
@@ -113,5 +120,28 @@ describe('libraryHref', () => {
     expect(libraryHref(params, { provider: 'prime' })).toBe(
       '/library?type=tv&q=dark&provider=prime',
     );
+  });
+});
+
+describe('settings and up next', () => {
+  it('accepts known services once each', () => {
+    expect(streamingProvidersSchema.parse(['netflix', 'prime', 'netflix'])).toEqual([
+      'netflix',
+      'prime',
+    ]);
+    expect(streamingProvidersSchema.safeParse(['blockbuster']).success).toBe(false);
+    expect(streamingProvidersSchema.parse([])).toEqual([]);
+  });
+
+  it('validates the up next toggle', () => {
+    expect(
+      upNextSchema.safeParse({ entryId: '0f8fad5b-d9cb-469f-a165-70867728950e', upNext: true })
+        .success,
+    ).toBe(true);
+    expect(upNextSchema.safeParse({ entryId: 'x', upNext: true }).success).toBe(false);
+  });
+
+  it('keeps "mine" as a platform filter', () => {
+    expect(libraryParamsSchema.parse({ provider: 'mine' }).provider).toBe('mine');
   });
 });

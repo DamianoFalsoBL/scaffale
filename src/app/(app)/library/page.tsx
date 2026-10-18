@@ -6,7 +6,7 @@ import { EntryGrid, EntryList } from '@/components/library-views';
 import { Button } from '@/components/ui/button';
 import { findWatchProvider } from '@/lib/catalogs';
 import { summarizeLists } from '@/lib/library/lists';
-import { getLibrary, getLists } from '@/lib/library/queries';
+import { getLibrary, getLists, getUserSettings } from '@/lib/library/queries';
 import type { LibraryEntry } from '@/lib/library/model';
 import { filterEntries, sortEntries, type StreamingAvailability } from '@/lib/library/views';
 import { getStreamingAvailability } from '@/lib/providers';
@@ -18,6 +18,13 @@ import { LibraryToolbar } from './library-toolbar';
 export const metadata: Metadata = {
   title: 'Libreria',
 };
+
+/** "Netflix", "Netflix e Prime Video", "Netflix, NOW e Prime Video". */
+function joinLabels(labels: string[]) {
+  return labels.length > 1
+    ? `${labels.slice(0, -1).join(', ')} e ${labels.at(-1)}`
+    : (labels[0] ?? '');
+}
 
 /** Platforms of the movies and series the other filters keep (only with a platform filter). */
 async function loadAvailability(entries: LibraryEntry[]) {
@@ -37,26 +44,33 @@ export default async function LibraryPage({ searchParams }: PageProps<'/library'
   // A deleted or unknown list shows the whole library.
   const params = activeList ? parsed : { ...parsed, list: '' };
 
-  const provider = findWatchProvider(params.provider);
+  // One platform, or "Le mie piattaforme" (the services saved in the profile).
+  const mine = params.provider === 'mine';
+  const myProviders = mine ? (await getUserSettings()).streamingProviders : [];
+  const platformLabel = mine
+    ? joinLabels(myProviders.map((slug) => findWatchProvider(slug)?.label ?? slug))
+    : findWatchProvider(params.provider)?.label;
+  const filters = { ...params, myProviders };
+
   let availability: StreamingAvailability = new Map();
   let unknown = 0;
-  if (provider) {
+  if (platformLabel) {
     const loaded = await loadAvailability(
-      filterEntries(entries, { ...params, type: 'all', provider: '' }),
+      filterEntries(entries, { ...filters, type: 'all', provider: '' }),
     );
     availability = loaded.available;
     unknown = loaded.failed;
   }
 
   // Counts per tab follow the other filters, so they match what each tab shows.
-  const counted = filterEntries(entries, { ...params, type: 'all' }, availability);
+  const counted = filterEntries(entries, { ...filters, type: 'all' }, availability);
   const counts = {
     all: counted.length,
     movie: counted.filter((e) => e.item.mediaType === 'movie').length,
     tv: counted.filter((e) => e.item.mediaType === 'tv').length,
     book: counted.filter((e) => e.item.mediaType === 'book').length,
   };
-  const visible = sortEntries(filterEntries(entries, params, availability), params.sort);
+  const visible = sortEntries(filterEntries(entries, filters, availability), params.sort);
 
   return (
     <div className="flex flex-col gap-6">
@@ -90,9 +104,21 @@ export default async function LibraryPage({ searchParams }: PageProps<'/library'
             </div>
           )}
           <LibraryToolbar params={params} counts={counts} />
-          {provider && (
+          {mine && myProviders.length === 0 && (
             <p className="text-sm text-muted-foreground" role="status">
-              Film e serie che puoi vedere su {provider.label} in abbonamento o gratis
+              Non hai ancora scelto le tue piattaforme.{' '}
+              <Link
+                href="/profile#piattaforme"
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Sceglile nel profilo
+              </Link>
+              .
+            </p>
+          )}
+          {platformLabel && (
+            <p className="text-sm text-muted-foreground" role="status">
+              Film e serie che puoi vedere su {platformLabel} in abbonamento o gratis
               {params.type === 'all' || params.type === 'book' ? ' (i libri non sono inclusi)' : ''}
               .
               {unknown > 0 &&

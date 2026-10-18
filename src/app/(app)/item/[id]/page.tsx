@@ -18,6 +18,7 @@ import { seasonList } from '@/lib/library/seasons';
 
 import { EntryForm } from './entry-form';
 import { EntryLists } from './entry-lists';
+import { UpNextButton } from './up-next-button';
 import { RemoveEntryButton } from './remove-entry-button';
 import { SeasonTracker } from './season-tracker';
 
@@ -45,6 +46,11 @@ export default async function ItemPage({ params }: PageProps<'/item/[id]'>) {
 
       <TitleDetails
         item={item}
+        actions={
+          entry.status === 'planned' ? (
+            <UpNextButton entryId={entry.id} title={item.title} upNext={!!entry.upNextAt} />
+          ) : undefined
+        }
         seasons={
           seasons.length > 0 ? (
             <SeasonTracker

@@ -11,7 +11,7 @@ import {
   type LibraryEntry,
   type LibraryRow,
 } from './model';
-import { buildDashboard, filterEntries, normalizeText, sortEntries } from './views';
+import { buildDashboard, filterEntries, normalizeText, sortEntries, watchNow } from './views';
 
 let seq = 0;
 function entry(
@@ -31,6 +31,7 @@ function entry(
     updatedAt: `2026-01-${String(seq).padStart(2, '0')}T10:00:00Z`,
     watchedSeasons: [],
     listIds: [],
+    upNextAt: null,
     ...rest,
     item: {
       id: `m${seq}`,
@@ -136,6 +137,7 @@ describe('row mapping', () => {
       notes: null,
       created_at: '2026-05-01T00:00:00Z',
       updated_at: '2026-05-01T00:00:00Z',
+      up_next_at: null,
       media_items: {
         id: 'm1',
         media_type: 'book',
@@ -216,6 +218,24 @@ describe('filterEntries', () => {
     expect(pick('')).toEqual(['n', 'p', 'u', 'b']);
   });
 
+  it('filters by the user’s own platforms ("mine")', () => {
+    const onNetflix = entry({ item: { id: 'n', mediaType: 'movie' } });
+    const onDisney = entry({ item: { id: 'd', mediaType: 'movie' } });
+    const availability = new Map([
+      ['n', [8]],
+      ['d', [337]],
+    ]);
+    const all = { type: 'all', status: 'all', q: '', provider: 'mine' } as const;
+    const pick = (myProviders: ('netflix' | 'prime' | 'disney')[]) =>
+      filterEntries([onNetflix, onDisney], { ...all, myProviders }, availability).map(
+        (e) => e.item.id,
+      );
+
+    expect(pick(['netflix', 'prime'])).toEqual(['n']);
+    expect(pick(['netflix', 'disney'])).toEqual(['n', 'd']);
+    expect(pick([])).toEqual([]);
+  });
+
   it('searches titles and authors ignoring accents and case', () => {
     expect(filterEntries(entries, { type: 'all', status: 'all', q: 'perche' })).toHaveLength(1);
     expect(filterEntries(entries, { type: 'all', status: 'all', q: 'HERBERT' })).toHaveLength(1);
@@ -289,6 +309,53 @@ describe('buildDashboard', () => {
       waiting: 1,
       planned: 1,
     });
+  });
+});
+
+describe('buildDashboard up next shelf', () => {
+  it('lists planned titles marked up next, in the order they were picked', () => {
+    const second = entry({ upNextAt: '2026-10-10T10:00:00Z' });
+    const first = entry({ upNextAt: '2026-10-01T10:00:00Z' });
+    const notPicked = entry();
+    // A stale mark on a title that moved on doesn't count.
+    const seen = entry({ status: 'completed', upNextAt: '2026-10-02T10:00:00Z' });
+
+    const { upNext } = buildDashboard([second, notPicked, first, seen]);
+    expect(upNext.map((e) => e.id)).toEqual([first.id, second.id]);
+  });
+});
+
+describe('watchNow', () => {
+  it('keeps planned movies and series on my services, up next first', () => {
+    const old = entry({ item: { id: 'old' }, createdAt: '2026-01-01T00:00:00Z' });
+    const recent = entry({ item: { id: 'recent' }, createdAt: '2026-09-01T00:00:00Z' });
+    const picked = entry({
+      item: { id: 'picked' },
+      createdAt: '2025-01-01T00:00:00Z',
+      upNextAt: '2026-10-01T00:00:00Z',
+    });
+    const elsewhere = entry({ item: { id: 'elsewhere' } });
+    const seen = entry({ status: 'completed', item: { id: 'seen' } });
+    const book = entry({ item: { id: 'book', mediaType: 'book' } });
+    const availability = new Map([
+      ['old', [8]],
+      ['recent', [2100]],
+      ['picked', [8, 119]],
+      ['elsewhere', [337]],
+      ['seen', [8]],
+    ]);
+
+    const result = watchNow([old, recent, picked, elsewhere, seen, book], availability, [
+      'netflix',
+      'prime',
+    ]);
+    expect(
+      result.map(({ entry: e, services }) => [e.item.id, services.map((s) => s.label)]),
+    ).toEqual([
+      ['picked', ['Netflix', 'Prime Video']],
+      ['recent', ['Prime Video']],
+      ['old', ['Netflix']],
+    ]);
   });
 });
 

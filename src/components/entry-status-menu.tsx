@@ -1,17 +1,19 @@
 'use client';
 
-import { ChevronDown } from 'lucide-react';
+import { BookmarkMinus, BookmarkPlus, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useOptimistic, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import { changeEntryStatus } from '@/actions/library';
+import { changeEntryStatus, setUpNext } from '@/actions/library';
 import { StatusDot } from '@/components/status-badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { MediaType } from '@/lib/providers/types';
@@ -23,23 +25,43 @@ import {
 } from '@/lib/status-labels';
 import { cn } from '@/lib/utils';
 
-/** Status pill that changes status in place, updating optimistically. */
+/**
+ * Status pill that changes status in place, updating optimistically. With `upNext`
+ * (library entries), planned titles also get "Metti tra i prossimi" / "Togli dai prossimi".
+ */
 export function EntryStatusMenu({
   entryId,
   mediaType,
   status,
   title,
+  upNext,
   className,
 }: {
   entryId: string;
   mediaType: MediaType;
   status: EntryStatus;
   title: string;
+  upNext?: boolean;
   className?: string;
 }) {
   const router = useRouter();
   const [optimisticStatus, setOptimisticStatus] = useOptimistic(status);
+  const [optimisticUpNext, setOptimisticUpNext] = useOptimistic(upNext);
   const [pending, startTransition] = useTransition();
+
+  function toggleUpNext() {
+    const next = !optimisticUpNext;
+    startTransition(async () => {
+      setOptimisticUpNext(next);
+      const result = await setUpNext({ entryId, upNext: next });
+      if (result.ok) {
+        toast.success(next ? `“${title}” è tra i prossimi` : `“${title}” tolto dai prossimi`);
+        router.refresh();
+      } else {
+        toast.error(result.error);
+      }
+    });
+  }
 
   function change(value: string) {
     const next = ENTRY_STATUSES.find((s) => s === value);
@@ -79,6 +101,15 @@ export function EntryStatusMenu({
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>
+        {upNext !== undefined && optimisticStatus === 'planned' && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={toggleUpNext}>
+              {optimisticUpNext ? <BookmarkMinus aria-hidden /> : <BookmarkPlus aria-hidden />}
+              {optimisticUpNext ? 'Togli dai prossimi' : 'Metti tra i prossimi'}
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

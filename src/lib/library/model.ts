@@ -31,6 +31,8 @@ export interface LibraryEntry {
   watchedSeasons: number[];
   /** Lists this entry belongs to. */
   listIds: string[];
+  /** When it was put among the next titles to watch/read ("Prossimi"); planned only. */
+  upNextAt: string | null;
   item: LibraryItem;
 }
 
@@ -65,6 +67,7 @@ export function toLibraryEntry(row: LibraryRow): LibraryEntry {
       .map((season) => season.season_number)
       .sort((a, b) => a - b),
     listIds: (row.list_items ?? []).map((item) => item.list_id),
+    upNextAt: row.up_next_at,
     item: {
       id: item.id,
       mediaType: item.media_type,

@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { knownWatchProviderSlugs, type WatchProviderSlug } from '@/lib/catalogs';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import type { NormalizedMedia } from '@/lib/providers/types';
@@ -109,4 +110,23 @@ export async function getLists(): Promise<ListInfo[]> {
     throw new Error('Could not load the lists', { cause: error });
   }
   return sortLists(data);
+}
+
+export interface UserSettings {
+  /** Streaming services the user subscribes to (empty until chosen in the profile). */
+  streamingProviders: WatchProviderSlug[];
+}
+
+/** Settings of the signed-in user (RLS); defaults when none are saved yet. */
+export async function getUserSettings(): Promise<UserSettings> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('user_settings')
+    .select('streaming_providers')
+    .maybeSingle();
+
+  if (error) {
+    throw new Error('Could not load the settings', { cause: error });
+  }
+  return { streamingProviders: knownWatchProviderSlugs(data?.streaming_providers ?? []) };
 }

@@ -1,6 +1,7 @@
 import { BookOpen, Film, Search, Tv } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 import { EntryCard } from '@/components/library-views';
 import { Shelf } from '@/components/shelf';
@@ -8,8 +9,10 @@ import { Button } from '@/components/ui/button';
 import { getCurrentUser } from '@/lib/auth/session';
 import { greeting } from '@/lib/format';
 import type { LibraryEntry } from '@/lib/library/model';
-import { getLibrary } from '@/lib/library/queries';
-import { buildDashboard, type DashboardData } from '@/lib/library/views';
+import { getLibrary, getUserSettings } from '@/lib/library/queries';
+import { buildDashboard, plannedStreamable, type DashboardData } from '@/lib/library/views';
+
+import { PickServicesHint, WatchNowShelf, WatchNowSkeleton } from './watch-now';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -30,7 +33,7 @@ function Section({
   large,
 }: {
   title: string;
-  href: string;
+  href?: string;
   entries: LibraryEntry[];
   total: number;
   empty: string;
@@ -135,7 +138,11 @@ function summary({
 }
 
 export default async function DashboardPage() {
-  const [entries, user] = await Promise.all([getLibrary(), getCurrentUser()]);
+  const [entries, user, settings] = await Promise.all([
+    getLibrary(),
+    getCurrentUser(),
+    getUserSettings(),
+  ]);
   const dashboard = buildDashboard(entries);
   const counts = dashboard.totals;
 
@@ -191,6 +198,16 @@ export default async function DashboardPage() {
         </dl>
       </div>
 
+      {/* The next titles the user picked: on top, only when there are some. */}
+      {dashboard.upNext.length > 0 && (
+        <Section
+          title="Prossimi"
+          entries={dashboard.upNext}
+          total={dashboard.upNext.length}
+          empty=""
+          large
+        />
+      )}
       <Section
         title="In corso"
         href="/library?status=in_progress"
@@ -209,6 +226,14 @@ export default async function DashboardPage() {
           empty=""
         />
       )}
+      {plannedStreamable(entries).length > 0 &&
+        (settings.streamingProviders.length > 0 ? (
+          <Suspense fallback={<WatchNowSkeleton />}>
+            <WatchNowShelf entries={entries} myProviders={settings.streamingProviders} />
+          </Suspense>
+        ) : (
+          <PickServicesHint />
+        ))}
       <Section
         title="Da vedere e da leggere"
         href="/library?status=planned"

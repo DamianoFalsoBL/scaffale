@@ -48,6 +48,40 @@ begin
   end if;
 end $$;
 
+-- Own settings: one row, readable and editable.
+insert into public.user_settings (streaming_providers) values ('{netflix}');
+update public.user_settings set streaming_providers = '{netflix,prime}';
+
+do $$
+begin
+  if (select streaming_providers from public.user_settings) <> '{netflix,prime}' then
+    raise exception 'FAIL: user A should read and update their settings';
+  end if;
+end $$;
+
+-- "Prossimi": a planned title can be up next; moving on clears the mark.
+insert into public.user_entries (id, media_item_id, status, up_next_at)
+values ('00000000-0000-4000-c000-000000000002', '00000000-0000-4000-b000-000000000002', 'planned', now());
+
+do $$
+begin
+  if (select up_next_at from public.user_entries where id = '00000000-0000-4000-c000-000000000002') is null then
+    raise exception 'FAIL: a planned title should keep its up next mark';
+  end if;
+  update public.user_entries set status = 'completed'
+  where id = '00000000-0000-4000-c000-000000000002';
+  if (select up_next_at from public.user_entries where id = '00000000-0000-4000-c000-000000000002') is not null then
+    raise exception 'FAIL: up next should be cleared when a title is no longer planned';
+  end if;
+  update public.user_entries set up_next_at = now()
+  where id = '00000000-0000-4000-c000-000000000002';
+  if (select up_next_at from public.user_entries where id = '00000000-0000-4000-c000-000000000002') is not null then
+    raise exception 'FAIL: only planned titles can be up next';
+  end if;
+  -- Back to the first entry only, for the counts below.
+  delete from public.user_entries where id = '00000000-0000-4000-c000-000000000002';
+end $$;
+
 -- Movies cannot be "in progress".
 do $$
 begin
@@ -106,6 +140,25 @@ begin
   if affected <> 0 then
     raise exception 'FAIL: user B removed user A list items';
   end if;
+
+  if (select count(*) from public.user_settings) <> 0 then
+    raise exception 'FAIL: user B can read user A settings';
+  end if;
+  update public.user_settings set streaming_providers = '{}';
+  get diagnostics affected = row_count;
+  if affected <> 0 then
+    raise exception 'FAIL: user B changed user A settings';
+  end if;
+end $$;
+
+-- B cannot write settings on behalf of A.
+do $$
+begin
+  insert into public.user_settings (user_id, streaming_providers)
+  values ('00000000-0000-4000-a000-00000000000a', '{}');
+  raise exception 'FAIL: user B wrote settings for user A';
+exception
+  when insufficient_privilege or unique_violation then null;
 end $$;
 
 -- B cannot put A's entry in a list of their own.
@@ -173,6 +226,14 @@ do $$
 begin
   perform 1 from public.user_entries;
   raise exception 'FAIL: anon can read user_entries';
+exception
+  when insufficient_privilege then null;
+end $$;
+
+do $$
+begin
+  perform 1 from public.user_settings;
+  raise exception 'FAIL: anon can read user_settings';
 exception
   when insufficient_privilege then null;
 end $$;

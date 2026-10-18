@@ -57,7 +57,7 @@ export const libraryParamsSchema = z.object({
   view: z.enum(LIBRARY_VIEWS).catch('grid'),
   q: z.string().trim().max(100).catch(''),
   list: z.uuid().catch(''),
-  provider: z.enum(['', ...WATCH_PROVIDER_SLUGS]).catch(''),
+  provider: z.enum(['', 'mine', ...WATCH_PROVIDER_SLUGS]).catch(''),
 });
 
 const listName = z
@@ -106,3 +106,11 @@ export function libraryHref(params: LibraryParams, changes: Partial<LibraryParam
   }
   return search.size ? `/library?${search}` : '/library';
 }
+
+export const upNextSchema = z.object({ entryId: z.uuid(), upNext: z.boolean() });
+
+/** The user's streaming services: known catalog slugs, each once. */
+export const streamingProvidersSchema = z
+  .array(z.enum(WATCH_PROVIDER_SLUGS))
+  .max(WATCH_PROVIDER_SLUGS.length)
+  .transform((slugs) => [...new Set(slugs)]);

@@ -104,8 +104,32 @@ export function findWatchProvider(slug: string | undefined) {
   return WATCH_PROVIDERS.find((provider) => provider.slug === slug);
 }
 
-/** Every TMDB provider id that counts as this service. */
-export function watchProviderIds(slug: WatchProviderSlug): ReadonlySet<number> {
-  const provider = findWatchProvider(slug);
-  return new Set(provider ? [provider.id, ...provider.aliases] : []);
+/** Every TMDB provider id that counts as these services (aliases included). */
+export function watchProviderIds(
+  slugs: WatchProviderSlug | readonly WatchProviderSlug[],
+): ReadonlySet<number> {
+  const list = typeof slugs === 'string' ? [slugs] : slugs;
+  return new Set(
+    list.flatMap((slug) => {
+      const provider = findWatchProvider(slug);
+      return provider ? [provider.id, ...provider.aliases] : [];
+    }),
+  );
+}
+
+/** Which of `slugs` stream a title, given its TMDB provider ids; catalog order. */
+export function servicesCarrying(
+  providerIds: readonly number[],
+  slugs: readonly WatchProviderSlug[],
+) {
+  return WATCH_PROVIDERS.filter(
+    (provider) =>
+      slugs.includes(provider.slug) &&
+      [provider.id, ...provider.aliases].some((id) => providerIds.includes(id)),
+  );
+}
+
+/** Known slugs only, once each, in catalog order (settings may hold retired ones). */
+export function knownWatchProviderSlugs(values: readonly string[]): WatchProviderSlug[] {
+  return WATCH_PROVIDER_SLUGS.filter((slug) => values.includes(slug));
 }

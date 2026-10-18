@@ -1,3 +1,4 @@
+import { BookmarkCheck } from 'lucide-react';
 import Link from 'next/link';
 
 import { EntryStatusMenu } from '@/components/entry-status-menu';
@@ -27,10 +28,31 @@ export function entryHref(entry: LibraryEntry) {
   return `/item/${entry.item.id}`;
 }
 
-export function EntryCard({ entry, showType }: { entry: LibraryEntry; showType?: boolean }) {
+/** Marks a title among the next ones ("Prossimi"). */
+export function UpNextBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+      <BookmarkCheck className="size-3.5" aria-hidden />
+      Prossimo
+    </span>
+  );
+}
+
+const isUpNext = (entry: LibraryEntry) => entry.status === 'planned' && !!entry.upNextAt;
+
+export function EntryCard({
+  entry,
+  showType,
+  note,
+}: {
+  entry: LibraryEntry;
+  showType?: boolean;
+  /** Replaces the usual note (season, waiting…), e.g. where to stream it. */
+  note?: string;
+}) {
   return (
     <MediaCard
-      media={{ ...entry.item, authors: authorsOf(entry), note: entryNote(entry) }}
+      media={{ ...entry.item, authors: authorsOf(entry), note: note ?? entryNote(entry) }}
       href={entryHref(entry)}
       showType={showType}
     >
@@ -40,7 +62,9 @@ export function EntryCard({ entry, showType }: { entry: LibraryEntry; showType?:
           mediaType={entry.item.mediaType}
           status={entry.status}
           title={entry.item.title}
+          upNext={isUpNext(entry)}
         />
+        {isUpNext(entry) && <UpNextBadge />}
         {entry.rating && <RatingStars rating={entry.rating} />}
       </div>
     </MediaCard>
@@ -93,7 +117,9 @@ export function EntryList({ entries }: { entries: LibraryEntry[] }) {
                   mediaType={entry.item.mediaType}
                   status={entry.status}
                   title={entry.item.title}
+                  upNext={isUpNext(entry)}
                 />
+                {isUpNext(entry) && <UpNextBadge />}
                 {entry.rating && <RatingStars rating={entry.rating} />}
                 {finished && (
                   <span className="text-xs text-muted-foreground">Finito il {finished}</span>

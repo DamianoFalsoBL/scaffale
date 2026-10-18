@@ -16,6 +16,7 @@ import {
   seasonsSchema,
   statusChangeSchema,
   updateEntrySchema,
+  upNextSchema,
   type AddEntryInput,
   type SeasonsInput,
   type UpdateEntryInput,
@@ -279,4 +280,40 @@ export async function setSeasonsWatched(input: SeasonsInput): Promise<ActionResu
 
   revalidateLibrary(entry.media_item_id);
   return { ok: true, data: { watchedSeasons, status } };
+}
+
+/**
+ * Puts a planned title among the next ones ("Prossimi") or takes it out. Only planned
+ * titles can be up next; the DB clears the mark when the status moves on.
+ */
+export async function setUpNext(input: {
+  entryId: string;
+  upNext: boolean;
+}): Promise<ActionResult<{ upNextAt: string | null }>> {
+  if (!(await getCurrentUser())) return fail(MESSAGES.session);
+
+  const parsed = upNextSchema.safeParse(input);
+  if (!parsed.success) return fail(MESSAGES.invalid);
+  const { entryId, upNext } = parsed.data;
+
+  const supabase = await createClient();
+  let query = supabase
+    .from('user_entries')
+    .update({ up_next_at: upNext ? new Date().toISOString() : null })
+    .eq('id', entryId);
+  if (upNext) query = query.eq('status', 'planned');
+  const { data, error } = await query.select('up_next_at, media_item_id');
+
+  if (error) {
+    console.error('setUpNext failed', { code: error.code });
+    return fail(MESSAGES.save);
+  }
+  if (data.length === 0) {
+    return fail(
+      upNext ? 'Solo i titoli da vedere o da leggere vanno tra i prossimi.' : MESSAGES.notFound,
+    );
+  }
+
+  revalidateLibrary(data[0]?.media_item_id);
+  return { ok: true, data: { upNextAt: data[0]?.up_next_at ?? null } };
 }

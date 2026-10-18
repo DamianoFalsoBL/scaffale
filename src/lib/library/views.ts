@@ -1,4 +1,4 @@
-import { watchProviderIds, type WatchProviderSlug } from '@/lib/catalogs';
+import { servicesCarrying, watchProviderIds, type WatchProviderSlug } from '@/lib/catalogs';
 import type { MediaType } from '@/lib/providers/types';
 import type { EntryStatus } from '@/lib/status-labels';
 
@@ -13,8 +13,12 @@ export interface LibraryFilters {
   q: string;
   /** A list id; empty or missing = every entry. */
   list?: string;
-  /** A streaming platform: only movies and series available on it (see `availability`). */
-  provider?: WatchProviderSlug | '';
+  /**
+   * A streaming platform, or "mine" for any of `myProviders`: only movies and series
+   * available there (see `availability`).
+   */
+  provider?: WatchProviderSlug | 'mine' | '';
+  myProviders?: readonly WatchProviderSlug[];
 }
 
 /** Platform ids (TMDB) streaming each catalog item, by item id; missing = unknown. */
@@ -52,7 +56,12 @@ export function filterEntries(
   availability: StreamingAvailability = new Map(),
 ) {
   const query = normalizeText(filters.q);
-  const providerIds = filters.provider ? watchProviderIds(filters.provider) : undefined;
+  const providerIds =
+    filters.provider === 'mine'
+      ? watchProviderIds(filters.myProviders ?? [])
+      : filters.provider
+        ? watchProviderIds(filters.provider)
+        : undefined;
 
   return entries.filter(
     (entry) =>
@@ -90,6 +99,8 @@ export function sortEntries(entries: readonly LibraryEntry[], sort: LibrarySort)
 }
 
 export interface DashboardData {
+  /** "Prossimi": in the order they were picked. */
+  upNext: LibraryEntry[];
   inProgress: LibraryEntry[];
   /** Series waiting for a new season; those with one already out first. */
   waiting: LibraryEntry[];
@@ -125,9 +136,13 @@ export function buildDashboard(
     list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, limit);
   const inProgress = byStatus('in_progress');
   const waiting = byStatus('waiting');
+  const upNext = entries
+    .filter((entry) => entry.status === 'planned' && entry.upNextAt)
+    .sort((a, b) => a.upNextAt!.localeCompare(b.upNextAt!));
   const planned = byStatus('planned');
 
   return {
+    upNext,
     inProgress: recentlyTouched(inProgress),
     waiting: [...waiting]
       .sort(
@@ -150,4 +165,36 @@ export function buildDashboard(
       planned: planned.length,
     },
   };
+}
+
+/** Planned movies and series the library can stream (availability is looked up for these). */
+export function plannedStreamable(entries: readonly LibraryEntry[]) {
+  return entries.filter(
+    (entry) =>
+      entry.status === 'planned' &&
+      (entry.item.mediaType === 'movie' || entry.item.mediaType === 'tv'),
+  );
+}
+
+/**
+ * "Puoi vederli subito": planned titles on at least one of the user's services, with the
+ * services' names. Up next first (in their order), then the newest additions.
+ */
+export function watchNow(
+  entries: readonly LibraryEntry[],
+  availability: StreamingAvailability,
+  myProviders: readonly WatchProviderSlug[],
+) {
+  return plannedStreamable(entries)
+    .map((entry) => ({
+      entry,
+      services: servicesCarrying(availability.get(entry.item.id) ?? [], myProviders),
+    }))
+    .filter(({ services }) => services.length > 0)
+    .sort(
+      (a, b) =>
+        Number(!!b.entry.upNextAt) - Number(!!a.entry.upNextAt) ||
+        (a.entry.upNextAt ?? '').localeCompare(b.entry.upNextAt ?? '') ||
+        b.entry.createdAt.localeCompare(a.entry.createdAt),
+    );
 }

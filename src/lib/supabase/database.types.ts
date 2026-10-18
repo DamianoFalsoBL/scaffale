@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   graphql_public: {
     Tables: {
@@ -199,6 +199,7 @@ export type Database = {
           started_at: string | null
           status: Database["public"]["Enums"]["entry_status"]
           times_completed: number
+          up_next_at: string | null
           updated_at: string
           user_id: string
         }
@@ -212,6 +213,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["entry_status"]
           times_completed?: number
+          up_next_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -225,6 +227,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["entry_status"]
           times_completed?: number
+          up_next_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -237,6 +240,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          streaming_providers: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          streaming_providers?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          streaming_providers?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

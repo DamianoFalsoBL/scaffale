@@ -2,10 +2,12 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { getCurrentUser } from '@/lib/auth/session';
+import { getUserSettings } from '@/lib/library/queries';
 import { createClient } from '@/lib/supabase/server';
 
 import { InstallHelp } from './install-help';
 import { PasskeyManager, type PasskeyList } from './passkey-manager';
+import { StreamingSettings } from './streaming-settings';
 
 export const metadata: Metadata = {
   title: 'Profilo',
@@ -35,7 +37,7 @@ export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
 
-  const passkeys = await listPasskeys();
+  const [passkeys, settings] = await Promise.all([listPasskeys(), getUserSettings()]);
 
   return (
     <div className="flex max-w-2xl flex-col gap-8">
@@ -45,6 +47,23 @@ export default async function ProfilePage() {
           {user.name} · {user.email}
         </p>
       </div>
+
+      <section
+        id="piattaforme"
+        className="flex scroll-mt-20 flex-col gap-3"
+        aria-labelledby="platforms-title"
+      >
+        <div className="space-y-1">
+          <h2 id="platforms-title" className="text-lg font-semibold">
+            Le mie piattaforme
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Gli abbonamenti che hai. In Home, “Puoi vederli subito” mostra i titoli da vedere che
+            trovi lì; in Libreria il filtro “Le mie piattaforme” li considera tutti insieme.
+          </p>
+        </div>
+        <StreamingSettings initial={settings.streamingProviders} />
+      </section>
 
       <section className="flex flex-col gap-3" aria-labelledby="passkeys-title">
         <div className="space-y-1">

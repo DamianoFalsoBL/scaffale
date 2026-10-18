@@ -123,6 +123,7 @@ export function LibraryToolbar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutte le piattaforme</SelectItem>
+            <SelectItem value="mine">Le mie piattaforme</SelectItem>
             {WATCH_PROVIDERS.map((provider) => (
               <SelectItem key={provider.slug} value={provider.slug}>
                 {provider.label}
